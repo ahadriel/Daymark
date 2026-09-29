@@ -1,0 +1,11 @@
+{
+  "name": "Daymark — Make room for what matters",
+  "short_name": "Daymark",
+  "description": "A calm daily planner for making room for what matters.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f0",
+  "theme_color": "#f6f5f0",
+  "icons": [{ "src": "./daymark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

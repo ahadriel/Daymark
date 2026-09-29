@@ -1,4 +1,4 @@
-name: Deploy Daymark to GitHub Pages
+name: Deploy Daymark Web
 
 on:
   push:
@@ -11,34 +11,30 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: github-pages
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+          version: 11.25.0
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
-          cache-dependency-path: pnpm-lock.yaml
+          node-version: 24
           cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Build Daymark
-        run: pnpm build
-      - name: Upload the Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
-
   deploy:
     environment:
       name: github-pages
@@ -49,4 +45,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
