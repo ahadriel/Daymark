@@ -1,4 +1,4 @@
-name: Deploy Daymark Web
+name: Deploy EONIS Web
 
 on:
   push:
