@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Activity, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, Flag, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, SlidersHorizontal, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
+import { Activity, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, Flag, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
 import { parseQuickCapture } from './core/quick-capture';
