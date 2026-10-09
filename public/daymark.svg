@@ -1,4 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="30" fill="#29332c"/>
-  <path d="M40 31h11v25c4-6 10-9 18-9 16 0 27 12 27 29S85 105 69 105c-8 0-14-3-19-9v7H40V31zm27 64c10 0 17-8 17-19s-7-19-17-19-17 8-17 19 7 19 17 19z" fill="#edc29c"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Daymark">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#344239"/>
+      <stop offset="1" stop-color="#202a23"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4d2a8"/>
+      <stop offset="1" stop-color="#d99a6c"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="31" fill="url(#bg)"/>
+  <circle cx="64" cy="47" r="14" fill="none" stroke="url(#gold)" stroke-width="7"/>
+  <path d="M25 72h78" fill="none" stroke="#e9eee7" stroke-width="6" stroke-linecap="round" opacity=".92"/>
+  <path d="M34 94 52 76l13 12 29-31" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="95" cy="57" r="4" fill="#f4d2a8"/>
 </svg>
