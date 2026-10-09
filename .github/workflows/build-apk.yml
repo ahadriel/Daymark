@@ -58,6 +58,43 @@ jobs:
             pnpm exec cap add android
           fi
 
+      - name: Apply Daymark launcher icon
+        run: |
+          mkdir -p android/app/src/main/res/drawable android/app/src/main/res/mipmap-anydpi-v26
+          cat > android/app/src/main/res/drawable/daymark_launcher_background.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <solid android:color="#29332C" />
+          </shape>
+          EOF
+          cat > android/app/src/main/res/drawable/daymark_launcher_foreground.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="128" android:viewportHeight="128">
+            <path android:fillColor="#00000000" android:strokeColor="#F4D2A8"
+                android:strokeWidth="7" android:strokeLineCap="round"
+                android:pathData="M64,33 A14,14 0 1,1 64,61 A14,14 0 1,1 64,33" />
+            <path android:fillColor="#00000000" android:strokeColor="#E9EEE7"
+                android:strokeWidth="6" android:strokeLineCap="round"
+                android:pathData="M25,72 L103,72" />
+            <path android:fillColor="#00000000" android:strokeColor="#F4D2A8"
+                android:strokeWidth="8" android:strokeLineCap="round"
+                android:strokeLineJoin="round" android:pathData="M34,94 L52,76 L65,88 L94,57" />
+          </vector>
+          EOF
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@drawable/daymark_launcher_background" />
+            <foreground android:drawable="@drawable/daymark_launcher_foreground" />
+          </adaptive-icon>
+          EOF
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@drawable/daymark_launcher_background" />
+            <foreground android:drawable="@drawable/daymark_launcher_foreground" />
+          </adaptive-icon>
+          EOF
+
       - name: Sync web app into Android project
         run: pnpm exec cap sync android
 
