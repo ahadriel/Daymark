@@ -107,6 +107,6 @@ export function createDefaultData(): DaymarkData {
         { title: 'Personal project', startMinute: 660, durationMinutes: 90 },
       ] },
     ],
-    preferences: { theme: 'light', accent: '#a45d3a', density: 'comfortable', weekStartsOn: 1 },
+    preferences: { theme: 'light', accent: '#5276c5', density: 'comfortable', weekStartsOn: 1 },
   };
 }
