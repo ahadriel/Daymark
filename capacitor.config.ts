@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.daymark.app',
-  appName: 'Daymark',
+  appName: 'EONIS',
   webDir: 'dist',
 
 };
