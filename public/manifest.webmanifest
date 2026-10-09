@@ -1,11 +1,11 @@
 {
-  "name": "Daymark — Make room for what matters",
-  "short_name": "Daymark",
-  "description": "A calm daily planner for making room for what matters.",
+  "name": "EONIS — Your Time. Your Universe.",
+  "short_name": "EONIS",
+  "description": "A precise, calm space for your tasks, plans, and time.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f5f0",
-  "theme_color": "#f6f5f0",
-  "icons": [{ "src": "./daymark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "background_color": "#0a1120",
+  "theme_color": "#0a1120",
+  "icons": [{ "src": "./eonis.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }
