@@ -1,4 +1,4 @@
-# Daymark architecture
+# EONIS architecture
 
 ## Shared app
 
@@ -24,7 +24,7 @@ The other table schemas are ready, but notes, calendar events, templates, and pr
 
 - Google Calendar belongs behind Supabase Edge Functions. OAuth refresh tokens must stay server-side. Persist provider event IDs and Google sync cursors so incremental updates and deletions can be reconciled safely.
 - `supabase/functions/jarvis-api` is an authenticated, user-scoped API starting point. It uses the caller's Supabase session and RLS; it never uses a service-role key for user data access.
-- Keep future external integrations behind a versioned API so the assistant can call Daymark without coupling to UI internals.
+- Keep future external integrations behind a versioned API so the assistant can call EONIS without coupling to UI internals.
 
 ## Secrets
 
