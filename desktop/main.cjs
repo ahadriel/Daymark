@@ -22,7 +22,7 @@ async function createWindow() {
     height: 860,
     minWidth: 360,
     minHeight: 560,
-    backgroundColor: '#f6f5f0',
+    backgroundColor: '#0a1120',
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -33,7 +33,7 @@ async function createWindow() {
     if (url.startsWith('https://')) void shell.openExternal(url);
     return { action: 'deny' };
   });
-  await window.loadURL('app://daymark/');
+  await window.loadURL('app://eonis/');
 }
 
 app.whenReady().then(createWindow);
