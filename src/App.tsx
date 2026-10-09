@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Activity, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, Flag, HardDrive, Home, ListTodo, LogOut, Moon, Pause, Play, Plus, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
+import { Activity, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, Flag, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
 import { parseQuickCapture } from './core/quick-capture';
@@ -181,7 +181,7 @@ function App() {
 
   return <div className="app-frame">
     <aside className={`sidebar ${mobileNav ? 'sidebar-open' : ''}`}>
-      <div className="brand"><div className="brand-symbol">d.</div><div><b>daymark</b><span>MAKE ROOM FOR WHAT MATTERS</span></div><button className="icon-button mobile-only" onClick={() => setMobileNav(false)} aria-label="Close menu"><X size={18} /></button></div>
+      <div className="brand"><div className="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><circle cx="16" cy="11" r="4.5" /><path d="M5 19.5h22M8 25l6-6 3.5 3.5L25 14" /></svg></div><div><b>daymark</b><span>MAKE ROOM FOR WHAT MATTERS</span></div><button className="icon-button mobile-only" onClick={() => setMobileNav(false)} aria-label="Close menu"><X size={18} /></button></div>
       <div className="workspace-label">WORKSPACE <span>LOCAL FIRST</span></div>
       <nav className="main-nav" aria-label="Main navigation">{nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-link ${view === label ? 'selected' : ''}`} onClick={() => go(label)}><Icon size={17} strokeWidth={1.8} /><span>{label}</span>{label === 'Tasks' && <small>{openTasks.length}</small>}</button>)}</nav>
       <div className="sidebar-nudge"><Sparkles size={16} /><span className="eyebrow">A small reminder</span><p>Progress is a practice, not a performance.</p></div>
@@ -189,7 +189,7 @@ function App() {
     </aside>
     {mobileNav && <button className="mobile-scrim" onClick={() => setMobileNav(false)} aria-label="Close navigation" />}
     <main className="main-area">
-      <header className="topbar"><button className="icon-button mobile-only" onClick={() => setMobileNav(true)} aria-label="Open menu"><ListTodo size={19} /></button><div className="crumb"><span>Daymark</span><ChevronRight size={14} /><b>{view}</b></div><div className="top-actions"><div className="top-date">{dayLabel(today, { weekday: 'long', month: 'long', day: 'numeric' })}</div><button className="search-trigger" onClick={() => setCommandOpen(true)}><Search size={15} /><span>Search Daymark</span><kbd><Command size={10} /> K</kbd></button><button className="profile-chip" onClick={() => go('Settings')} title="Account settings">{session?.user.email?.slice(0, 1).toUpperCase() ?? 'S'}</button></div></header>
+      <header className="topbar"><button className="icon-button mobile-only" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={19} /></button><div className="crumb"><span>Daymark</span><ChevronRight size={14} /><b>{view}</b></div><div className="top-actions"><div className="top-date">{dayLabel(today, { weekday: 'long', month: 'long', day: 'numeric' })}</div><button className="search-trigger" onClick={() => setCommandOpen(true)}><Search size={15} /><span>Search Daymark</span><kbd><Command size={10} /> K</kbd></button><button className="profile-chip" onClick={() => go('Settings')} title="Account settings">{session?.user.email?.slice(0, 1).toUpperCase() ?? 'S'}</button></div></header>
       <div className="page-content">
         {view === 'Today' && <>
           <section className="welcome-row"><div><span className="overline">{dayLabel(today, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span><h1>A clearer day<br /><em>starts here.</em></h1><p>Choose what matters. Make a little room to do it.</p></div><div className="progress-card"><div className="progress-top"><span>Today’s progress</span><Activity size={17} /></div><div className="progress-number">{percent}<small>%</small></div><div className="progress-track"><span style={{ width: `${percent}%` }} /></div><div className="progress-caption"><span>{completedTasks.length} finished</span><span>{openTasks.length} to go</span></div></div></section>
