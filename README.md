@@ -1,5 +1,11 @@
 # Daymark
 
+<p align="center">
+  <img src="public/daymark.svg" width="112" height="112" alt="Daymark sunrise progress logo" />
+</p>
+
+<p align="center"><strong>Make room for what matters.</strong></p>
+
 Daymark is a calm, local-first planner with one shared web codebase for the browser, Windows app, and Android app.
 
 ## What is here
@@ -42,7 +48,7 @@ The `calendar_connections` table stores connection metadata only. Google OAuth r
 - `pnpm android:sync` copies the latest web build into the Android project.
 - `pnpm android:debug` builds an installable debug APK after the Android project has been generated.
 
-The **Build Daymark Apps** workflow creates a Windows installer and an Android debug APK on a release tag (`v*`) or manual run. The Android project is generated from the checked-in Capacitor config during CI; its build output is attached as an Actions artifact. Store signing is not configured.
+The **Build Daymark APK** workflow creates `appbuild/Daymark.apk` on manual run and relevant pushes; it also attaches a downloadable `Daymark-APK` artifact. Its web build receives `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from GitHub Actions secrets, so the Android build can initialize the same Supabase client as the web app. The **Build Daymark Apps** workflow also creates Windows and Android artifacts on manual run or a `v*` tag. Store signing is not configured.
 
 ## Data and privacy
 
