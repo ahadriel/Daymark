@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { Activity, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, Flag, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
-import { createTask, mergeRecords, newId, type CalendarEvent, type EONISData, type DayNote, type Task, type TaskPriority } from './core/model';
+import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
 import { parseQuickCapture } from './core/quick-capture';
 import { readData, writeData } from './data/local-store';
@@ -27,7 +27,7 @@ function makeEvent(title: string, startsAt: Date): CalendarEvent {
 }
 
 function App() {
-  const [data, setData] = useState<EONISData>(() => readData());
+  const [data, setData] = useState<DaymarkData>(() => readData());
   const dataRef = useRef(data);
   const [view, setView] = useState<View>('Today');
   const [filter, setFilter] = useState<TaskFilter>('all');
@@ -53,7 +53,7 @@ function App() {
   const todayTasks = openTasks.filter((task) => !task.dueAt || new Date(task.dueAt) <= today || sameDay(new Date(task.dueAt), today));
   const chosenFocusTask = tasks.find((task) => task.id === focusTaskId);
 
-  function updateData(change: (current: EONISData) => EONISData) {
+  function updateData(change: (current: DaymarkData) => DaymarkData) {
     const next = change(dataRef.current); dataRef.current = next; setData(next); writeData(next); return next;
   }
   function commitTask(task: Task) {
@@ -122,7 +122,7 @@ function App() {
     if (query.trim()) list = list.filter((task) => `${task.title} ${task.details} ${task.category} ${task.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()));
     return list.sort((a, b) => a.status === b.status ? (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999') : a.status === 'open' ? -1 : 1);
   }, [tasks, filter, query]);
-  const setPreference = <K extends keyof EONISData['preferences']>(key: K, value: EONISData['preferences'][K]) => updateData((current) => ({ ...current, preferences: { ...current.preferences, [key]: value } }));
+  const setPreference = <K extends keyof DaymarkData['preferences']>(key: K, value: DaymarkData['preferences'][K]) => updateData((current) => ({ ...current, preferences: { ...current.preferences, [key]: value } }));
   function addTask() {
     const parsed = parseQuickCapture(capture); if (!parsed.title) return;
     const task = createTask(parsed.title, parsed.dueAt);
@@ -158,7 +158,7 @@ function App() {
   async function importData(file?: File) {
     if (!file) return;
     try {
-      const imported = JSON.parse(await file.text()) as EONISData;
+      const imported = JSON.parse(await file.text()) as DaymarkData;
       if (imported.schemaVersion !== 1 || !Array.isArray(imported.tasks)) throw new Error('This is not an EONIS backup.');
       if (!window.confirm('Import this backup and replace the data on this device?')) return;
       updateData(() => imported); setStatus('Backup restored on this device.');
