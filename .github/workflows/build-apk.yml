@@ -67,7 +67,7 @@ jobs:
           cat > android/app/src/main/res/drawable/eonis_launcher_background.xml <<'EOF'
           <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
             <corners android:radius="28dp" />
-            <solid android:color="#29332C" />
+            <solid android:color="#0A1120" />
           </shape>
           EOF
           cat > android/app/src/main/res/drawable/eonis_launcher_foreground.xml <<'EOF'
