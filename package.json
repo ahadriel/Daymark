@@ -1,5 +1,5 @@
 {
-  "name": "daymark",
+  "name": "eonis",
   "private": true,
   "version": "2.0.0",
   "type": "module",
@@ -35,10 +35,10 @@
   },
   "build": {
     "appId": "com.daymark.app",
-    "productName": "Daymark",
+    "productName": "EONIS",
     "directories": { "output": "release" },
     "files": ["dist/**/*", "desktop/**/*", "package.json"],
-    "win": { "target": ["nsis"], "artifactName": "Daymark-${version}-Setup.${ext}" },
+    "win": { "target": ["nsis"], "artifactName": "EONIS-${version}-Setup.${ext}" },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true }
   }
 }
