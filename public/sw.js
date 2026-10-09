@@ -1,4 +1,4 @@
-const CACHE = 'eonis-shell-v2';
+const CACHE = 'daymark-shell-v1';
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(['./', './manifest.webmanifest', './eonis.svg'])));
   self.skipWaiting();
