@@ -1,17 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Daymark">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="EONIS eclipse orbital mark">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#344239"/>
-      <stop offset="1" stop-color="#202a23"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f4d2a8"/>
-      <stop offset="1" stop-color="#d99a6c"/>
-    </linearGradient>
+    <linearGradient id="night" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#152647"/><stop offset="1" stop-color="#070c18"/></linearGradient>
+    <linearGradient id="orbit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c6d7ff"/><stop offset="1" stop-color="#5f8fff"/></linearGradient>
   </defs>
-  <rect width="128" height="128" rx="31" fill="url(#bg)"/>
-  <circle cx="64" cy="47" r="14" fill="none" stroke="url(#gold)" stroke-width="7"/>
-  <path d="M25 72h78" fill="none" stroke="#e9eee7" stroke-width="6" stroke-linecap="round" opacity=".92"/>
-  <path d="M34 94 52 76l13 12 29-31" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="95" cy="57" r="4" fill="#f4d2a8"/>
+  <rect width="128" height="128" rx="30" fill="url(#night)"/>
+  <circle cx="64" cy="64" r="34" fill="none" stroke="#5f8fff" stroke-width="1.5" opacity=".45"/>
+  <circle cx="64" cy="64" r="24" fill="none" stroke="url(#orbit)" stroke-width="5"/>
+  <path d="M42 82a29 29 0 0 0 44-39" fill="none" stroke="#0a1120" stroke-width="12" stroke-linecap="round"/>
+  <path d="M42 82a29 29 0 0 0 44-39" fill="none" stroke="url(#orbit)" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="88" cy="39" r="4" fill="#e0e9ff"/>
 </svg>
