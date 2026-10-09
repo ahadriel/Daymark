@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('DAYMARK_WEB_ORIGIN') ?? '*',
+  'Access-Control-Allow-Origin': Deno.env.get('EONIS_WEB_ORIGIN') ?? '*',
   'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Content-Type': 'application/json',
