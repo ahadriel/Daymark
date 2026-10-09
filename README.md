@@ -1,12 +1,12 @@
-# Daymark
+# EONIS
 
 <p align="center">
-  <img src="public/daymark.svg" width="112" height="112" alt="Daymark sunrise progress logo" />
+  <img src="public/eonis.svg" width="112" height="112" alt="EONIS eclipse orbital logo" />
 </p>
 
-<p align="center"><strong>Make room for what matters.</strong></p>
+<p align="center"><strong>YOUR TIME. YOUR UNIVERSE.</strong></p>
 
-Daymark is a calm, local-first planner with one shared web codebase for the browser, Windows app, and Android app.
+EONIS is a calm, local-first planner with one shared web codebase for the browser, Windows app, and Android app.
 
 ## What is here
 
@@ -48,11 +48,11 @@ The `calendar_connections` table stores connection metadata only. Google OAuth r
 - `pnpm android:sync` copies the latest web build into the Android project.
 - `pnpm android:debug` builds an installable debug APK after the Android project has been generated.
 
-The **Build Daymark APK** workflow creates `appbuild/Daymark.apk` on manual run and relevant pushes; it also attaches a downloadable `Daymark-APK` artifact. Its web build receives `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from GitHub Actions secrets, so the Android build can initialize the same Supabase client as the web app. The **Build Daymark Apps** workflow also creates Windows and Android artifacts on manual run or a `v*` tag. Store signing is not configured.
+The **Build EONIS APK** workflow creates `appbuild/EONIS.apk` on manual run and relevant pushes; it also attaches a downloadable `EONIS-APK` artifact. Its web build receives `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from GitHub Actions secrets, so the Android build can initialize the same Supabase client as the web app. The **Build EONIS Apps** workflow also creates Windows and Android artifacts on manual run or a `v*` tag. Store signing is not configured.
 
 ## Data and privacy
 
-Daymark has no analytics or tracking. Without Supabase configuration, data stays in this browser or app installation. Export a JSON backup in Settings before changing devices or clearing site data.
+EONIS has no analytics or tracking. Without Supabase configuration, data stays in this browser or app installation. Export a JSON backup in Settings before changing devices or clearing site data.
 
 ## Project map
 
