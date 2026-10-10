@@ -74,19 +74,17 @@ jobs:
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="108dp" android:height="108dp"
               android:viewportWidth="128" android:viewportHeight="128">
-            <path android:fillColor="#00000000" android:strokeColor="#5F8FFF"
-                android:strokeAlpha="0.65" android:strokeWidth="1.5"
-                android:pathData="M98,64 A34,34 0 1,1 30,64 A34,34 0 1,1 98,64" />
+            <path android:fillColor="#172744" android:pathData="M31,0 L97,0 Q128,0 128,31 L128,97 Q128,128 97,128 L31,128 Q0,128 0,97 L0,31 Q0,0 31,0 Z" />
             <path android:fillColor="#00000000" android:strokeColor="#B9CEFF"
-                android:strokeWidth="5" android:strokeLineCap="round"
-                android:pathData="M64,40 A24,24 0 1,1 64,88 A24,24 0 1,1 64,40" />
-            <path android:fillColor="#00000000" android:strokeColor="#0A1120"
-                android:strokeWidth="12" android:strokeLineCap="round"
-                android:pathData="M42,82 A29,29 0 0,0 86,43" />
-            <path android:fillColor="#00000000" android:strokeColor="#7DA4FF"
-                android:strokeWidth="4" android:strokeLineCap="round"
-                android:pathData="M42,82 A29,29 0 0,0 86,43" />
-            <path android:fillColor="#E0E9FF" android:pathData="M92,35 A4,4 0 1,1 84,35 A4,4 0 1,1 92,35" />
+                android:strokeWidth="7" android:strokeLineCap="round"
+                android:pathData="M64,33 A14,14 0 1,1 64,61 A14,14 0 1,1 64,33" />
+            <path android:fillColor="#00000000" android:strokeColor="#E7EEFF"
+                android:strokeWidth="6" android:strokeLineCap="round"
+                android:pathData="M25,72 L103,72" />
+            <path android:fillColor="#00000000" android:strokeColor="#648EFF"
+                android:strokeWidth="8" android:strokeLineCap="round" android:strokeLineJoin="round"
+                android:pathData="M34,94 L52,76 L65,88 L94,57" />
+            <path android:fillColor="#B9CEFF" android:pathData="M99,57 A4,4 0 1,1 91,57 A4,4 0 1,1 99,57" />
           </vector>
           EOF
           cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
