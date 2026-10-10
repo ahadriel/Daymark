@@ -126,11 +126,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
           git add appbuild/EONIS.apk
           if git diff --cached --quiet; then
             echo "APK is unchanged; nothing to commit."
           else
             git commit -m "Build EONIS Android APK"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
