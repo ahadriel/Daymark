@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { Browser } from '@capacitor/browser';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X, RotateCw } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
@@ -19,6 +20,7 @@ const filters: Array<{ label: string; value: TaskFilter }> = [
   { label: 'All tasks', value: 'all' }, { label: 'Open', value: 'open' }, { label: 'Completed', value: 'completed' }, { label: 'Today', value: 'today' },
   { label: 'Upcoming', value: 'upcoming' }, { label: 'Overdue', value: 'overdue' }, { label: 'High priority', value: 'high' }, { label: 'No due date', value: 'unscheduled' },
 ];
+function notificationId(value: string) { let hash = 0; for (let i = 0; i < value.length; i += 1) hash = (Math.imul(hash, 31) + value.charCodeAt(i)) | 0; return Math.abs(hash % 2147483647) || 1; }
 function sameDay(a: Date, b: Date) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
 function dayLabel(value: string | Date, options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' }) { return new Intl.DateTimeFormat(undefined, options).format(typeof value === 'string' ? new Date(value) : value); }
 function timeLabel(value: string | Date) { return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(typeof value === 'string' ? new Date(value) : value); }
@@ -114,7 +116,27 @@ function App() {
     return () => { stopped = true; void client.removeChannel(channel); };
   }, [session?.user.id]);
   useEffect(() => {
-    if (!notificationsEnabled || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    if (!notificationsEnabled) return;
+    if (Capacitor.isNativePlatform()) {
+      let cancelled = false;
+      void (async () => {
+        try {
+          const pending = await LocalNotifications.getPending();
+          if (cancelled) return;
+          if (pending.notifications.length) await LocalNotifications.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+          const now = Date.now();
+          const scheduled = dataRef.current.tasks
+            .filter((task) => !task.deletedAt && task.status === 'open' && task.dueAt && new Date(task.dueAt).getTime() > now)
+            .map((task) => ({ task, id: notificationId(task.id) }));
+          if (scheduled.length) await LocalNotifications.schedule({ notifications: scheduled.map(({ task, id }) => ({
+            id, title: 'EONIS · Task starting now', body: task.title,
+            schedule: { at: new Date(task.dueAt!) }, extra: { taskId: task.id },
+          })) });
+        } catch (error) { setStatus(`Could not schedule Android reminders: ${error instanceof Error ? error.message : 'notification error'}`); }
+      })();
+      return () => { cancelled = true; };
+    }
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
     const checkDueTasks = () => {
       const now = Date.now();
       const seenKey = 'eonis-task-start-notifications-v1';
@@ -131,8 +153,17 @@ function App() {
     checkDueTasks();
     const timer = window.setInterval(checkDueTasks, 10_000);
     return () => window.clearInterval(timer);
-  }, [notificationsEnabled]);
+  }, [notificationsEnabled, data.tasks]);
   async function enableNotifications() {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const permission = await LocalNotifications.requestPermissions();
+        const enabled = permission.display === 'granted';
+        setNotificationsEnabled(enabled);
+        setStatus(enabled ? 'Android task reminders enabled. Upcoming task times are scheduled by the system.' : 'Notifications were not enabled. Allow them in Android app settings.');
+      } catch (error) { setStatus(`Could not enable Android notifications: ${error instanceof Error ? error.message : 'permission error'}`); }
+      return;
+    }
     if (typeof Notification === 'undefined') { setStatus('This app environment does not support browser notifications.'); return; }
     const permission = await Notification.requestPermission();
     const enabled = permission === 'granted';
