@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X, RotateCw } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
@@ -204,6 +206,13 @@ function App() {
     if (command.includes('add task')) { setCommandOpen(false); document.getElementById('quick-capture')?.focus(); return; }
     setQuery(commandQuery); go('Tasks');
   }
+  async function openBrowserExternally(url = browserUrl) {
+    try {
+      await Browser.open({ url, toolbarColor: '#0A1120' });
+    } catch {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
   function navigateBrowser(nextUrl: string) {
     const nextHistory = [...browserHistory.slice(0, browserHistoryIndex + 1), nextUrl];
     setBrowserHistory(nextHistory);
@@ -264,8 +273,8 @@ function App() {
 
 
         {view === 'Browser' && <PageHeading eyebrow="A LITTLE WEB, INSIDE YOUR WORKSPACE" title="Browser" text="Look things up without leaving EONIS. Some websites block embedded browsing." action={<button className="button-soft" onClick={() => { setBrowserAddress('https://www.google.com'); setBrowserUrl('https://www.google.com'); }}><ArrowLeft size={15} /> Home</button>}>
-          <form className="browser-toolbar" onSubmit={(event) => { event.preventDefault(); let next = browserAddress.trim(); if (!next) return; if (!/^https?:\/\//i.test(next)) next = /^[^\s.]+$/.test(next) ? `https://www.google.com/search?q=${encodeURIComponent(next)}` : `https://${next}`; try { const parsed = new URL(next); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Only web addresses are supported.'); navigateBrowser(parsed.href); } catch { setStatus('Enter a valid website address or search phrase.'); } }}>
-            <button className="browser-control" type="button" onClick={browserBack} disabled={browserHistoryIndex <= 0} aria-label="Back" title="Back"><ArrowLeft size={16} /></button><button className="browser-control" type="button" onClick={browserForward} disabled={browserHistoryIndex >= browserHistory.length - 1} aria-label="Forward" title="Forward"><ArrowRight size={16} /></button><button className="browser-control" type="button" onClick={() => setBrowserReloadKey((key) => key + 1)} aria-label="Reload" title="Reload"><RotateCw size={16} /></button><button className="browser-control" type="button" onClick={() => navigateBrowser('https://www.google.com')} aria-label="Home" title="Home"><Home size={16} /></button><Globe size={17} /><input aria-label="Website address or search" value={browserAddress} onChange={(event) => setBrowserAddress(event.target.value)} placeholder="Search the web or enter a website" /><button className="primary-action" type="submit">Go <ArrowRight size={14} /></button><button className="button-soft" type="button" onClick={() => window.open(browserUrl, '_blank', 'noopener,noreferrer')} title="Open in external browser"><ExternalLink size={15} /></button>
+          <form className="browser-toolbar" onSubmit={(event) => { event.preventDefault(); let next = browserAddress.trim(); if (!next) return; if (!/^https?:\/\//i.test(next)) next = /^[^\s.]+$/.test(next) ? `https://www.google.com/search?q=${encodeURIComponent(next)}` : `https://${next}`; try { const parsed = new URL(next); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Only web addresses are supported.'); if (Capacitor.isNativePlatform() && (parsed.hostname === 'jw.org' || parsed.hostname.endsWith('.jw.org'))) { setBrowserAddress(parsed.href); setBrowserUrl(parsed.href); setStatus('Opening JW.org in the secure in-app browser.'); void openBrowserExternally(parsed.href); } else { navigateBrowser(parsed.href); } } catch { setStatus('Enter a valid website address or search phrase.'); } }}>
+            <button className="browser-control" type="button" onClick={browserBack} disabled={browserHistoryIndex <= 0} aria-label="Back" title="Back"><ArrowLeft size={16} /></button><button className="browser-control" type="button" onClick={browserForward} disabled={browserHistoryIndex >= browserHistory.length - 1} aria-label="Forward" title="Forward"><ArrowRight size={16} /></button><button className="browser-control" type="button" onClick={() => setBrowserReloadKey((key) => key + 1)} aria-label="Reload" title="Reload"><RotateCw size={16} /></button><button className="browser-control" type="button" onClick={() => navigateBrowser('https://www.google.com')} aria-label="Home" title="Home"><Home size={16} /></button><Globe size={17} /><input aria-label="Website address or search" value={browserAddress} onChange={(event) => setBrowserAddress(event.target.value)} placeholder="Search the web or enter a website" /><button className="primary-action" type="submit">Go <ArrowRight size={14} /></button><button className="button-soft" type="button" onClick={() => void openBrowserExternally(browserUrl)} title="Open in in-app browser"><ExternalLink size={15} /></button>
           </form>
           <div className="browser-notice"><Globe size={15} /><span>Some websites block embedded browsing. Use Open externally when a site refuses to load.</span></div>
           <section className="panel browser-frame"><iframe key={`${browserUrl}-${browserReloadKey}`} title="EONIS built-in browser" src={browserUrl} referrerPolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" /></section>
