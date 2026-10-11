@@ -1,4 +1,12 @@
 # EONIS
+> ⛔ **PROPRIETARY - NO PERMISSION GRANTED - ALL RIGHTS RESERVED**
+> Copyright © 2026 Hadriel Ashwin. No use, copying, reading for implementation, or recreation is permitted. See `LICENSE` file.
+
+<p align="center">
+  <img src="public/eonis.svg" width="112" height="112" alt="EONIS eclipse orbital logo" />
+</p>
+
+<p align="center"><strong>YOUR TIME. YOUR UNIVERSE.</strong></p>
 
 <p align="center">
   <img src="public/eonis.svg" width="112" height="112" alt="EONIS eclipse orbital logo" />
