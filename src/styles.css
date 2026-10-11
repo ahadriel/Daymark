@@ -67,3 +67,31 @@
 .browser-frame{height:min(68vh,760px);min-height:360px;overflow:hidden;background:#fff}
 .browser-frame iframe{display:block;width:100%;height:100%;border:0;background:#fff}
 @media(max-width:560px){.browser-toolbar{gap:6px;padding:7px}.browser-toolbar .button-soft{padding:0 8px}.browser-frame{height:65vh;min-height:300px}}
+
+
+/* Full-viewport EONIS browser */
+body:has(.browser-toolbar), body:has(.browser-toolbar) #root { height:100%; min-height:100%; overflow:hidden; }
+body:has(.browser-toolbar) .app-frame { display:block; width:100%; height:100dvh; min-height:0; overflow:hidden; }
+body:has(.browser-toolbar) .sidebar,
+body:has(.browser-toolbar) .topbar,
+body:has(.browser-toolbar) .page-footer,
+body:has(.browser-toolbar) .page-heading,
+body:has(.browser-toolbar) .browser-notice { display:none !important; }
+body:has(.browser-toolbar) .main-area { width:100%; height:100dvh; min-height:0; overflow:hidden; }
+body:has(.browser-toolbar) .page-content { display:flex; flex-direction:column; gap:0; width:100%; max-width:none; height:100%; min-height:0; margin:0; padding:0; overflow:hidden; }
+body:has(.browser-toolbar) .browser-toolbar { position:relative; z-index:2; flex:0 0 auto; display:flex; flex-wrap:nowrap; align-items:center; gap:6px; margin:0; padding:calc(8px + env(safe-area-inset-top, 0px)) 9px 8px; border:0; border-bottom:1px solid var(--line); border-radius:0; background:var(--paper); }
+body:has(.browser-toolbar) .browser-toolbar > svg { flex:0 0 auto; }
+body:has(.browser-toolbar) .browser-toolbar input { flex:1 1 auto; width:0; min-width:35px; height:38px; padding:0 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); font-size:12px; }
+.browser-control { display:inline-flex; flex:0 0 34px; align-items:center; justify-content:center; width:34px; height:36px; padding:0; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); }
+.browser-control:disabled { opacity:.35; cursor:default; }
+body:has(.browser-toolbar) .browser-toolbar .primary-action { min-height:36px; padding:0 10px; }
+body:has(.browser-toolbar) .browser-toolbar .button-soft { min-height:36px; padding:0 9px; }
+body:has(.browser-toolbar) .browser-frame { flex:1 1 auto; width:100%; height:auto; min-height:0; margin:0; border:0; border-radius:0; overflow:hidden; background:#fff; }
+body:has(.browser-toolbar) .browser-frame iframe { display:block; width:100%; height:100%; min-height:0; border:0; }
+@media(max-width:520px) {
+  body:has(.browser-toolbar) .browser-toolbar { gap:4px; padding-left:6px; padding-right:6px; }
+  .browser-control { flex-basis:30px; width:30px; height:34px; }
+  body:has(.browser-toolbar) .browser-toolbar > svg { display:none; }
+  body:has(.browser-toolbar) .browser-toolbar input { padding:0 7px; font-size:11px; }
+  body:has(.browser-toolbar) .browser-toolbar .button-soft { padding:0 7px; }
+}
