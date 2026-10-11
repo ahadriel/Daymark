@@ -56,3 +56,14 @@
 :root[data-theme="dark"] .google-icon{background:#182640;color:#b8cbff}
 :root[data-theme="dark"] .quick-capture input::placeholder{color:#8d938b}
 :root[data-theme="dark"] .priority-urgent{color:#f0a27d}
+
+
+/* EONIS embedded browser */
+.browser-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--muted)}
+.browser-toolbar input{flex:1;min-width:0;border:0;outline:0!important;background:transparent;color:var(--ink);font-size:12px}
+.browser-toolbar .primary-action,.browser-toolbar .button-soft{flex:0 0 auto}
+.browser-notice{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--muted);font-size:10px;line-height:1.5}
+.browser-notice svg{flex:0 0 auto;color:var(--accent)}
+.browser-frame{height:min(68vh,760px);min-height:360px;overflow:hidden;background:#fff}
+.browser-frame iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+@media(max-width:560px){.browser-toolbar{gap:6px;padding:7px}.browser-toolbar .button-soft{padding:0 8px}.browser-frame{height:65vh;min-height:300px}}
