@@ -16,6 +16,7 @@
     "desktop:build": "pnpm build && electron-builder --win nsis --x64"
   },
   "dependencies": {
+    "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.0",
     "@supabase/supabase-js": "^2.57.4",
     "lucide-react": "^0.545.0",
