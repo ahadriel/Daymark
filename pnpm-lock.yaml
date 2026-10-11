@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@capacitor/browser':
+        specifier: ^8.0.4
+        version: 8.0.4(@capacitor/core@8.5.2)
       '@capacitor/core':
         specifier: ^8.5.0
         version: 8.5.2
@@ -146,6 +149,11 @@ packages:
     resolution: {integrity: sha512-O2kpA5ZPJUAmliDCcmpMf8xnJwMezxlFPUrlyOAjbL3U9MFNY3l4ZpPI/UXwvyPmR8ETcVF9pFr+VdWq61rqTQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
+
+  '@capacitor/browser@8.0.4':
+    resolution: {integrity: sha512-ORZ4u/y+7aMuu6yVuk6SP529fUZyqcbnuHB1q5McpA3o2SYfVoi28iB8rsQjI2ad1qlKJd29ZUuGtspXLBDlWg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@capacitor/core@8.5.2':
     resolution: {integrity: sha512-agnQbGdhGw/KZFuLf7H9SY2o+oE7upkr/WPQsYaokXP6f9chaE8iVmbKkfN6SVl4w3pmz7oZ3Ur1hbkmy1hx+w==}
@@ -2046,6 +2054,8 @@ snapshots:
       xml2js: 0.6.2
     transitivePeerDependencies:
       - supports-color
+
+  '@capacitor/browser@8.0.4(@capacitor/core@8.5.2)': {}
 
   '@capacitor/core@8.5.2':
     dependencies:
