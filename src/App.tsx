@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Activity, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, Flag, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
 import { parseQuickCapture } from './core/quick-capture';
 import { readData, writeData } from './data/local-store';
 import { fromTaskRow, supabase, toTaskRow } from './lib/supabase';
 
-type View = 'Today' | 'Tasks' | 'Calendar' | 'Timeline' | 'Planner' | 'Notes' | 'Insights' | 'Settings';
+type View = 'Today' | 'Tasks' | 'Calendar' | 'Timeline' | 'Planner' | 'Notes' | 'Insights' | 'Browser' | 'Settings';
 type TaskFilter = 'all' | 'open' | 'completed' | 'today' | 'upcoming' | 'overdue' | 'high' | 'unscheduled';
 const nav: Array<{ label: View; icon: typeof Home }> = [
   { label: 'Today', icon: Home }, { label: 'Tasks', icon: ListTodo }, { label: 'Calendar', icon: CalendarDays }, { label: 'Timeline', icon: Clock3 },
-  { label: 'Planner', icon: WandSparkles }, { label: 'Notes', icon: StickyNote }, { label: 'Insights', icon: BarChart3 }, { label: 'Settings', icon: Settings },
+  { label: 'Planner', icon: WandSparkles }, { label: 'Notes', icon: StickyNote }, { label: 'Insights', icon: BarChart3 }, { label: 'Browser', icon: Globe }, { label: 'Settings', icon: Settings },
 ];
 const filters: Array<{ label: string; value: TaskFilter }> = [
   { label: 'All tasks', value: 'all' }, { label: 'Open', value: 'open' }, { label: 'Completed', value: 'completed' }, { label: 'Today', value: 'today' },
@@ -41,6 +41,9 @@ function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
   const [status, setStatus] = useState('');
+  const [browserAddress, setBrowserAddress] = useState('https://www.google.com');
+  const [browserUrl, setBrowserUrl] = useState('https://www.google.com');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(typeof Notification !== 'undefined' && Notification.permission === 'granted');
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [focusSeconds, setFocusSeconds] = useState(25 * 60);
   const [focusRunning, setFocusRunning] = useState(false);
@@ -95,6 +98,32 @@ function App() {
     })();
     return () => { stopped = true; void client.removeChannel(channel); };
   }, [session?.user.id]);
+  useEffect(() => {
+    if (!notificationsEnabled || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const checkDueTasks = () => {
+      const now = Date.now();
+      const seenKey = 'eonis-task-start-notifications-v1';
+      let seen: string[] = [];
+      try { seen = JSON.parse(window.localStorage.getItem(seenKey) || '[]') as string[]; } catch { seen = []; }
+      const dueNow = dataRef.current.tasks.filter((task) => !task.deletedAt && task.status === 'open' && task.dueAt && new Date(task.dueAt).getTime() <= now && new Date(task.dueAt).getTime() > now - 60_000 && !seen.includes(task.id));
+      for (const task of dueNow) {
+        try { new Notification('EONIS · Task starting now', { body: task.title, tag: `eonis-task-${task.id}`, icon: './eonis.svg' }); } catch { /* notification support varies by platform */ }
+        seen.push(task.id);
+      }
+      if (seen.length > 500) seen = seen.slice(-250);
+      window.localStorage.setItem(seenKey, JSON.stringify(seen));
+    };
+    checkDueTasks();
+    const timer = window.setInterval(checkDueTasks, 10_000);
+    return () => window.clearInterval(timer);
+  }, [notificationsEnabled]);
+  async function enableNotifications() {
+    if (typeof Notification === 'undefined') { setStatus('This app environment does not support browser notifications.'); return; }
+    const permission = await Notification.requestPermission();
+    const enabled = permission === 'granted';
+    setNotificationsEnabled(enabled);
+    setStatus(enabled ? 'Task start notifications enabled while EONIS is running.' : 'Notifications were not enabled. You can change this in your browser or device settings.');
+  }
   useEffect(() => {
     if (!focusRunning) return;
     const timer = window.setInterval(() => setFocusSeconds((seconds) => Math.max(0, seconds - 1)), 1000);
@@ -209,9 +238,18 @@ function App() {
 
         {view === 'Insights' && <PageHeading eyebrow="NOTICE YOUR PROGRESS" title="Insights" text="A gentle look at the work you’ve done."><div className="insight-cards"><div className="insight-card"><span className="overline">COMPLETED TASKS</span><b>{completedTasks.length}</b><small>All-time marks</small></div><div className="insight-card"><span className="overline">OPEN TASKS</span><b>{openTasks.length}</b><small>Still in your hands</small></div><div className="insight-card"><span className="overline">COMPLETION</span><b>{percent}%</b><small>Of current task list</small></div></div><div className="panel heatmap-panel"><div className="panel-heading"><div><span className="overline">LAST 28 DAYS</span><h2>Your steady marks</h2></div><span className="muted-copy">Completed tasks by day</span></div><div className="heatmap">{Array.from({ length: 28 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (27 - index)); const count = completedTasks.filter((task) => task.completedAt && sameDay(new Date(task.completedAt), date)).length; return <span key={index} className={`heat-cell heat-${Math.min(4, count)}`} title={`${dayLabel(date)} · ${count} complete`} />; })}</div><div className="heat-legend"><span>Less</span>{[0, 1, 2, 3, 4].map((level) => <i key={level} className={`heat-cell heat-${level}`} />)}<span>More</span></div></div><div className="achievements"><h2>Good things you’ve done</h2><div className="achievement-row"><span className="achievement-icon"><Sparkles size={18} /></span><div><b>{tasks.length ? 'You started.' : 'The first mark is waiting.'}</b><small>{tasks.length ? 'Your EONIS journey is taking shape.' : 'Add one task to begin your history.'}</small></div></div><div className="achievement-row"><span className="achievement-icon"><CheckCheck size={18} /></span><div><b>{completedTasks.length >= 10 ? 'Ten tasks complete.' : `${10 - completedTasks.length} more to your first ten.`}</b><small>Small finishes add up.</small></div></div></div></PageHeading>}
 
+
+        {view === 'Browser' && <PageHeading eyebrow="A LITTLE WEB, INSIDE YOUR WORKSPACE" title="Browser" text="Look things up without leaving EONIS. Some websites block embedded browsing." action={<button className="button-soft" onClick={() => { setBrowserAddress('https://www.google.com'); setBrowserUrl('https://www.google.com'); }}><ArrowLeft size={15} /> Home</button>}>
+          <form className="browser-toolbar" onSubmit={(event) => { event.preventDefault(); let next = browserAddress.trim(); if (!next) return; if (!/^https?:\/\//i.test(next)) next = /^[^\s.]+$/.test(next) ? `https://www.google.com/search?q=${encodeURIComponent(next)}` : `https://${next}`; try { const parsed = new URL(next); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Only web addresses are supported.'); setBrowserAddress(parsed.href); setBrowserUrl(parsed.href); } catch { setStatus('Enter a valid website address or search phrase.'); } }}>
+            <Globe size={17} /><input aria-label="Website address or search" value={browserAddress} onChange={(event) => setBrowserAddress(event.target.value)} placeholder="Search the web or enter a website" /><button className="primary-action" type="submit">Go <ArrowRight size={14} /></button><button className="button-soft" type="button" onClick={() => window.open(browserUrl, '_blank', 'noopener,noreferrer')} title="Open in external browser"><ExternalLink size={15} /></button>
+          </form>
+          <div className="browser-notice"><Globe size={15} /><span>Embedded sites may refuse to load because of their security settings. Use the external-open button if that happens.</span></div>
+          <section className="panel browser-frame"><iframe key={browserUrl} title="EONIS built-in browser" src={browserUrl} referrerPolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" /></section>
+        </PageHeading>}
         {view === 'Settings' && <PageHeading eyebrow="MAKE EONIS YOURS" title="Settings" text="Your preferences, account, and data tools."><div className="settings-layout">
           <section className="panel settings-panel"><div className="panel-heading"><div><span className="overline">ACCOUNT & SYNC</span><h2>{session ? 'Cloud sync is on' : 'Connect your devices'}</h2></div>{session ? <Cloud className="settings-status-icon" size={19} /> : <HardDrive className="settings-status-icon" size={19} />}</div><p>{session ? `Signed in as ${session.user.email}. Task changes sync through Supabase.` : supabase ? 'Sign in to sync your tasks across EONIS on the web, Windows, and Android.' : 'Supabase is not configured yet. Your data is stored locally on this device.'}</p>{!supabase && <div className="setup-hint">Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in your GitHub Actions secrets and local <code>.env</code> file to enable accounts.</div>}{supabase && !session && <form className="auth-form" onSubmit={submitAuth}><input type="email" required autoComplete="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="Email address" /><input type="password" required minLength={8} autoComplete={authMode === 'sign-in' ? 'current-password' : 'new-password'} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} placeholder="Password" /><button className="primary-action" type="submit">{authMode === 'sign-in' ? 'Sign in' : 'Create account'} <ArrowRight size={15} /></button><button className="text-link" type="button" onClick={() => setAuthMode(authMode === 'sign-in' ? 'sign-up' : 'sign-in')}>{authMode === 'sign-in' ? 'New to EONIS? Create an account' : 'Already have an account? Sign in'}</button></form>}{session && <button className="button-soft" onClick={() => void supabase?.auth.signOut()}><LogOut size={15} /> Sign out</button>}<div className="setup-hint">{status || (session ? 'Task updates sync live when you are online.' : 'Your local data stays available if you are offline.')}</div></section>
           <section className="panel settings-panel"><div className="panel-heading"><div><span className="overline">APPEARANCE</span><h2>Make it feel right</h2></div></div><div className="setting-row"><div className="setting-label"><span className="setting-icon theme-setting-icon">{data.preferences.theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}</span><div><b>Theme</b><small>Choose a light or dark workspace</small></div></div><button className="button-soft" onClick={() => setPreference('theme', data.preferences.theme === 'dark' ? 'light' : 'dark')}>{data.preferences.theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}{data.preferences.theme === 'dark' ? 'Dark' : 'Light'}</button></div><div className="setting-row"><div className="setting-label"><span className="setting-icon accent-setting-icon"><Palette size={18} /></span><div><b>Accent color</b><small>A small detail that makes EONIS yours</small></div></div><input className="color-input" type="color" value={data.preferences.accent} onChange={(event) => setPreference('accent', event.target.value)} aria-label="Accent color" /></div><div className="setting-row"><div className="setting-label"><span className="setting-icon density-setting-icon"><MonitorCog size={18} /></span><div><b>Layout density</b><small>Choose comfortable or compact spacing</small></div></div><select value={data.preferences.density} onChange={(event) => setPreference('density', event.target.value as 'comfortable' | 'compact')}><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></div></section>
+          <section className="panel settings-panel"><div className="panel-heading"><div><span className="overline">REMINDERS</span><h2>Task start notifications</h2></div><Clock3 className="settings-status-icon" size={19} /></div><p>Get a notification when an open task reaches its scheduled time. Keep EONIS running and allow notifications on this device.</p><div className="setting-actions"><button className="primary-action" onClick={() => void enableNotifications()}>{notificationsEnabled ? <Check size={15} /> : <Sparkles size={15} />}{notificationsEnabled ? 'Notifications enabled' : 'Enable notifications'}</button>{notificationsEnabled && <button className="button-soft" onClick={() => { setNotificationsEnabled(false); setStatus('Task start notifications paused.'); }}>Pause notifications</button>}</div><div className="setup-hint">Browser-based reminders run while EONIS is open. Reliable reminders when the app is fully closed require native scheduled notifications.</div></section>
           <section className="panel settings-panel"><div className="panel-heading"><div><span className="overline">YOUR DATA</span><h2>Always yours</h2></div></div><p>Export a portable JSON backup or restore one on this device.</p><div className="setting-actions"><button className="button-soft" onClick={exportData}><Download size={15} /> Export backup</button><button className="button-soft" onClick={() => importRef.current?.click()}><Upload size={15} /> Import backup</button><input ref={importRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={(event) => void importData(event.target.files?.[0])} /></div></section>
           <section className="panel settings-panel"><div className="panel-heading"><div><span className="overline">CONNECTED SERVICES</span><h2>Room to grow</h2></div></div><div className="integration-row"><div className="integration-icon google-icon">G</div><div><b>Google Calendar</b><small>Two-way event sync is planned; connection setup is not enabled yet.</small></div><span className="coming-soon">SOON</span></div><div className="integration-row"><div className="integration-icon jarvis-icon"><Sparkles size={16} /></div><div><b>JARVIS integration</b><small>A versioned API layer is reserved for a future assistant connection.</small></div><span className="coming-soon">LATER</span></div></section>
         </div><footer className="settings-foot">EONIS keeps your time in focus.</footer></PageHeading>}
