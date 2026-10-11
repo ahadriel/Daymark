@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X, RotateCw } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
 import { parseQuickCapture } from './core/quick-capture';
@@ -43,6 +43,9 @@ function App() {
   const [status, setStatus] = useState('');
   const [browserAddress, setBrowserAddress] = useState('https://www.google.com');
   const [browserUrl, setBrowserUrl] = useState('https://www.google.com');
+  const [browserHistory, setBrowserHistory] = useState<string[]>(['https://www.google.com']);
+  const [browserHistoryIndex, setBrowserHistoryIndex] = useState(0);
+  const [browserReloadKey, setBrowserReloadKey] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(typeof Notification !== 'undefined' && Notification.permission === 'granted');
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [focusSeconds, setFocusSeconds] = useState(25 * 60);
@@ -201,6 +204,27 @@ function App() {
     if (command.includes('add task')) { setCommandOpen(false); document.getElementById('quick-capture')?.focus(); return; }
     setQuery(commandQuery); go('Tasks');
   }
+  function navigateBrowser(nextUrl: string) {
+    const nextHistory = [...browserHistory.slice(0, browserHistoryIndex + 1), nextUrl];
+    setBrowserHistory(nextHistory);
+    setBrowserHistoryIndex(nextHistory.length - 1);
+    setBrowserAddress(nextUrl);
+    setBrowserUrl(nextUrl);
+  }
+  function browserBack() {
+    if (browserHistoryIndex <= 0) return;
+    const nextIndex = browserHistoryIndex - 1;
+    setBrowserHistoryIndex(nextIndex);
+    setBrowserAddress(browserHistory[nextIndex]);
+    setBrowserUrl(browserHistory[nextIndex]);
+  }
+  function browserForward() {
+    if (browserHistoryIndex >= browserHistory.length - 1) return;
+    const nextIndex = browserHistoryIndex + 1;
+    setBrowserHistoryIndex(nextIndex);
+    setBrowserAddress(browserHistory[nextIndex]);
+    setBrowserUrl(browserHistory[nextIndex]);
+  }
   function startFocus(task: Task) { setFocusTaskId(task.id); setFocusSeconds(25 * 60); setFocusRunning(true); }
 
   const plan = planMyDay(openTasks, data.events);
@@ -240,11 +264,11 @@ function App() {
 
 
         {view === 'Browser' && <PageHeading eyebrow="A LITTLE WEB, INSIDE YOUR WORKSPACE" title="Browser" text="Look things up without leaving EONIS. Some websites block embedded browsing." action={<button className="button-soft" onClick={() => { setBrowserAddress('https://www.google.com'); setBrowserUrl('https://www.google.com'); }}><ArrowLeft size={15} /> Home</button>}>
-          <form className="browser-toolbar" onSubmit={(event) => { event.preventDefault(); let next = browserAddress.trim(); if (!next) return; if (!/^https?:\/\//i.test(next)) next = /^[^\s.]+$/.test(next) ? `https://www.google.com/search?q=${encodeURIComponent(next)}` : `https://${next}`; try { const parsed = new URL(next); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Only web addresses are supported.'); setBrowserAddress(parsed.href); setBrowserUrl(parsed.href); } catch { setStatus('Enter a valid website address or search phrase.'); } }}>
-            <Globe size={17} /><input aria-label="Website address or search" value={browserAddress} onChange={(event) => setBrowserAddress(event.target.value)} placeholder="Search the web or enter a website" /><button className="primary-action" type="submit">Go <ArrowRight size={14} /></button><button className="button-soft" type="button" onClick={() => window.open(browserUrl, '_blank', 'noopener,noreferrer')} title="Open in external browser"><ExternalLink size={15} /></button>
+          <form className="browser-toolbar" onSubmit={(event) => { event.preventDefault(); let next = browserAddress.trim(); if (!next) return; if (!/^https?:\/\//i.test(next)) next = /^[^\s.]+$/.test(next) ? `https://www.google.com/search?q=${encodeURIComponent(next)}` : `https://${next}`; try { const parsed = new URL(next); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Only web addresses are supported.'); navigateBrowser(parsed.href); } catch { setStatus('Enter a valid website address or search phrase.'); } }}>
+            <button className="browser-control" type="button" onClick={browserBack} disabled={browserHistoryIndex <= 0} aria-label="Back" title="Back"><ArrowLeft size={16} /></button><button className="browser-control" type="button" onClick={browserForward} disabled={browserHistoryIndex >= browserHistory.length - 1} aria-label="Forward" title="Forward"><ArrowRight size={16} /></button><button className="browser-control" type="button" onClick={() => setBrowserReloadKey((key) => key + 1)} aria-label="Reload" title="Reload"><RotateCw size={16} /></button><button className="browser-control" type="button" onClick={() => navigateBrowser('https://www.google.com')} aria-label="Home" title="Home"><Home size={16} /></button><Globe size={17} /><input aria-label="Website address or search" value={browserAddress} onChange={(event) => setBrowserAddress(event.target.value)} placeholder="Search the web or enter a website" /><button className="primary-action" type="submit">Go <ArrowRight size={14} /></button><button className="button-soft" type="button" onClick={() => window.open(browserUrl, '_blank', 'noopener,noreferrer')} title="Open in external browser"><ExternalLink size={15} /></button>
           </form>
-          <div className="browser-notice"><Globe size={15} /><span>Embedded sites may refuse to load because of their security settings. Use the external-open button if that happens.</span></div>
-          <section className="panel browser-frame"><iframe key={browserUrl} title="EONIS built-in browser" src={browserUrl} referrerPolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" /></section>
+          <div className="browser-notice"><Globe size={15} /><span>Some websites block embedded browsing. Use Open externally when a site refuses to load.</span></div>
+          <section className="panel browser-frame"><iframe key={`${browserUrl}-${browserReloadKey}`} title="EONIS built-in browser" src={browserUrl} referrerPolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" /></section>
         </PageHeading>}
         {view === 'Settings' && <PageHeading eyebrow="MAKE EONIS YOURS" title="Settings" text="Your preferences, account, and data tools."><div className="settings-layout">
           <section className="panel settings-panel"><div className="panel-heading"><div><span className="overline">ACCOUNT & SYNC</span><h2>{session ? 'Cloud sync is on' : 'Connect your devices'}</h2></div>{session ? <Cloud className="settings-status-icon" size={19} /> : <HardDrive className="settings-status-icon" size={19} />}</div><p>{session ? `Signed in as ${session.user.email}. Task changes sync through Supabase.` : supabase ? 'Sign in to sync your tasks across EONIS on the web, Windows, and Android.' : 'Supabase is not configured yet. Your data is stored locally on this device.'}</p>{!supabase && <div className="setup-hint">Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in your GitHub Actions secrets and local <code>.env</code> file to enable accounts.</div>}{supabase && !session && <form className="auth-form" onSubmit={submitAuth}><input type="email" required autoComplete="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="Email address" /><input type="password" required minLength={8} autoComplete={authMode === 'sign-in' ? 'current-password' : 'new-password'} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} placeholder="Password" /><button className="primary-action" type="submit">{authMode === 'sign-in' ? 'Sign in' : 'Create account'} <ArrowRight size={15} /></button><button className="text-link" type="button" onClick={() => setAuthMode(authMode === 'sign-in' ? 'sign-up' : 'sign-in')}>{authMode === 'sign-in' ? 'New to EONIS? Create an account' : 'Already have an account? Sign in'}</button></form>}{session && <button className="button-soft" onClick={() => void supabase?.auth.signOut()}><LogOut size={15} /> Sign out</button>}<div className="setup-hint">{status || (session ? 'Task updates sync live when you are online.' : 'Your local data stays available if you are offline.')}</div></section>
