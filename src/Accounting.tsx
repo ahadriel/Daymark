@@ -1,18 +1,35 @@
-import { useMemo, useState, type FormEvent } from 'react';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, Download, FileText, Plus, Printer, Trash2, Wallet } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { supabase } from './lib/supabase';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, Download, FileText, Plus, Printer, RotateCw, Trash2, Wallet } from 'lucide-react';
 
 type EventKind = 'Daily' | 'Travel' | 'Custom';
 type EntryKind = 'income' | 'expense';
 type AccountEvent = { id: string; name: string; kind: EventKind; openingBalance: number; startDate: string; description: string; createdAt: string };
 type Transaction = { id: string; eventId: string; kind: EntryKind; amount: number; date: string; description: string; category: string; paymentMethod: string; notes: string };
-type LedgerData = { events: AccountEvent[]; transactions: Transaction[] };
+type LedgerData = { events: AccountEvent[]; transactions: Transaction[]; deletedTransactionIds: string[] };
 const STORAGE_KEY = 'eonis-accounting-v1';
 const today = () => new Date().toISOString().slice(0, 10);
 const categories = ['Food', 'Travel', 'Fuel', 'Water', 'Accommodation', 'Shopping', 'Bills', 'Transport', 'Health', 'Entertainment', 'Income', 'Other'];
-const emptyData: LedgerData = { events: [], transactions: [] };
+const emptyData: LedgerData = { events: [], transactions: [], deletedTransactionIds: [] };
 function loadLedger(): LedgerData {
-  try { const value = localStorage.getItem(STORAGE_KEY); if (!value) return emptyData; const parsed = JSON.parse(value) as LedgerData; return { events: Array.isArray(parsed.events) ? parsed.events : [], transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [] }; }
+  try { const value = localStorage.getItem(STORAGE_KEY); if (!value) return emptyData; const parsed = JSON.parse(value) as LedgerData; return { events: Array.isArray(parsed.events) ? parsed.events : [], transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [], deletedTransactionIds: Array.isArray(parsed.deletedTransactionIds) ? parsed.deletedTransactionIds : [] }; }
   catch { return emptyData; }
+}
+function mergeLedgers(local: LedgerData, cloud: LedgerData): LedgerData {
+  const deletedTransactionIds = Array.from(new Set([...(cloud.deletedTransactionIds ?? []), ...(local.deletedTransactionIds ?? [])]));
+  const events = new Map<string, AccountEvent>();
+  for (const event of cloud.events ?? []) events.set(event.id, event);
+  for (const event of local.events ?? []) events.set(event.id, event);
+  const transactions = new Map<string, Transaction>();
+  for (const transaction of cloud.transactions ?? []) transactions.set(transaction.id, transaction);
+  for (const transaction of local.transactions ?? []) transactions.set(transaction.id, transaction);
+  return { events: [...events.values()], transactions: [...transactions.values()].filter((item) => !deletedTransactionIds.includes(item.id)), deletedTransactionIds };
+}
+function normaliseLedger(value: unknown): LedgerData {
+  if (!value || typeof value !== 'object') return emptyData;
+  const candidate = value as Partial<LedgerData>;
+  return { events: Array.isArray(candidate.events) ? candidate.events : [], transactions: Array.isArray(candidate.transactions) ? candidate.transactions : [], deletedTransactionIds: Array.isArray(candidate.deletedTransactionIds) ? candidate.deletedTransactionIds : [] };
 }
 function money(value: number) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value); }
 function id() { return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
@@ -20,6 +37,10 @@ function escapeCsv(value: unknown) { const text = String(value ?? ''); return `"
 
 export default function Accounting() {
   const [ledger, setLedger] = useState<LedgerData>(() => loadLedger());
+  const [session, setSession] = useState<Session | null>(null);
+  const [cloudState, setCloudState] = useState<'offline' | 'signed-out' | 'syncing' | 'synced' | 'error'>(supabase ? 'signed-out' : 'offline');
+  const [lastSyncedAt, setLastSyncedAt] = useState('');
+  const [syncBusy, setSyncBusy] = useState(false);
   const [selectedId, setSelectedId] = useState('');
   const [showNewEvent, setShowNewEvent] = useState(false);
   const [showNewTransaction, setShowNewTransaction] = useState(false);
@@ -40,7 +61,58 @@ export default function Accounting() {
   const [statementEnd, setStatementEnd] = useState('');
   const [statementMode, setStatementMode] = useState(false);
   const [notice, setNotice] = useState('');
-  const persist = (next: LedgerData) => { setLedger(next); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { setNotice('Could not save accounting data on this device. Check available storage.'); } };
+  const saveLocal = useCallback((next: LedgerData) => {
+    setLedger(next);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); }
+    catch { setNotice('Could not save accounting data on this device. Check available storage.'); }
+  }, []);
+  const syncToCloud = useCallback(async (snapshot?: LedgerData) => {
+    if (!supabase) { setCloudState('offline'); return; }
+    const { data: auth } = await supabase.auth.getSession();
+    const activeSession = auth.session;
+    if (!activeSession) { setCloudState('signed-out'); return; }
+    setCloudState('syncing');
+    setSyncBusy(true);
+    try {
+      const local = snapshot ?? loadLedger();
+      const { data: remoteRow, error: readError } = await supabase.from('accounting_ledgers').select('data, updated_at').eq('user_id', activeSession.user.id).maybeSingle();
+      if (readError) throw readError;
+      const cloud = normaliseLedger(remoteRow?.data);
+      const merged = mergeLedgers(local, cloud);
+      const payload = { user_id: activeSession.user.id, data: merged, updated_at: new Date().toISOString() };
+      const { error: writeError } = await supabase.from('accounting_ledgers').upsert(payload, { onConflict: 'user_id' });
+      if (writeError) throw writeError;
+      saveLocal(merged);
+      setLastSyncedAt(new Date().toISOString());
+      setCloudState('synced');
+    } catch (error) {
+      console.error('EONIS Accounting cloud sync failed', error);
+      setCloudState('error');
+      setNotice('Cloud sync failed. Your changes are still saved locally; tap Sync now to retry.');
+    } finally { setSyncBusy(false); }
+  }, [saveLocal]);
+  const persist = (next: LedgerData) => {
+    const normalised = normaliseLedger(next);
+    saveLocal(normalised);
+    if (session && supabase) void syncToCloud(normalised);
+  };
+  useEffect(() => {
+    if (!supabase) { setCloudState('offline'); return; }
+    let active = true;
+    void supabase.auth.getSession().then(async ({ data: auth }) => {
+      if (!active) return;
+      setSession(auth.session);
+      if (!auth.session) { setCloudState('signed-out'); return; }
+      await syncToCloud(loadLedger());
+    }).catch(() => { if (active) setCloudState('error'); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      if (!nextSession) { setCloudState('signed-out'); return; }
+      // Defer Supabase calls until after the auth callback completes.
+      window.setTimeout(() => { if (active) void syncToCloud(loadLedger()); }, 0);
+    });
+    return () => { active = false; listener.subscription.unsubscribe(); };
+  }, [syncToCloud]);
   const selected = ledger.events.find((event) => event.id === selectedId) ?? ledger.events[0];
   const eventTransactions = useMemo(() => selected ? ledger.transactions.filter((transaction) => transaction.eventId === selected.id).sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)) : [], [ledger.transactions, selected]);
   const filteredTransactions = useMemo(() => eventTransactions.filter((transaction) => (!statementStart || transaction.date >= statementStart) && (!statementEnd || transaction.date <= statementEnd)), [eventTransactions, statementStart, statementEnd]);
@@ -65,7 +137,7 @@ export default function Accounting() {
   }
   function deleteTransaction(transactionId: string) {
     if (!window.confirm('Delete this transaction? The running and closing balances will be recalculated.')) return;
-    persist({ ...ledger, transactions: ledger.transactions.filter((transaction) => transaction.id !== transactionId) }); setNotice('Transaction deleted.');
+    persist({ ...ledger, transactions: ledger.transactions.filter((transaction) => transaction.id !== transactionId), deletedTransactionIds: Array.from(new Set([...ledger.deletedTransactionIds, transactionId])) }); setNotice('Transaction deleted.');
   }
   function exportStatement() {
     if (!selected) return;
@@ -86,7 +158,7 @@ export default function Accounting() {
   }
 
   return <div className="accounting-suite">
-    <div className="accounting-heading"><div><span className="overline">MONEY, ACCOUNTED FOR</span><h1>Accounting</h1><p>Every rupee tracked. Every event balanced. Your own personal ledger.</p></div><button className="primary-action" onClick={() => setShowNewEvent(true)}><Plus size={16} /> New event</button></div>
+    <div className="accounting-heading"><div><span className="overline">MONEY, ACCOUNTED FOR</span><h1>Accounting</h1><p>Every rupee tracked. Every event balanced. Your own personal ledger.</p><div className={`accounting-sync-status ${cloudState}`}><span className="accounting-sync-dot" />{cloudState === 'offline' ? 'Local-only mode · cloud not configured' : cloudState === 'signed-out' ? 'Saved on this device · sign in to sync' : cloudState === 'syncing' ? 'Syncing all ledgers and transactions…' : cloudState === 'synced' ? `Cloud synced${lastSyncedAt ? ' · ' + new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}` : 'Cloud sync needs attention'}</div></div><div className="accounting-heading-actions"><button className="button-soft" onClick={() => void syncToCloud()} disabled={syncBusy || !session || !supabase}><RotateCw size={15} className={syncBusy ? 'accounting-spin' : ''} /> {syncBusy ? 'Syncing…' : 'Sync now'}</button><button className="primary-action" onClick={() => setShowNewEvent(true)}><Plus size={16} /> New event</button></div></div>
     {notice && <div className="accounting-notice" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Dismiss notice">×</button></div>}
     <div className="accounting-type-row">{(['Daily', 'Travel', 'Custom'] as EventKind[]).map((kind) => <button key={kind} className={eventKind === kind ? 'accounting-type active' : 'accounting-type'} onClick={() => { setEventKind(kind); setShowNewEvent(true); }}><span>{kind === 'Daily' ? '◷' : kind === 'Travel' ? '↗' : '✳'}</span><b>{kind}</b><small>{kind === 'Daily' ? 'Everyday money' : kind === 'Travel' ? 'Trips & journeys' : 'Anything you define'}</small></button>)}</div>
     <div className="accounting-layout">
