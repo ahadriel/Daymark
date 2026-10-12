@@ -16,7 +16,7 @@ export function readData(): DaymarkData {
       events: Array.isArray(parsed.events) ? parsed.events : defaults.events,
       notes: Array.isArray(parsed.notes) ? parsed.notes : defaults.notes,
       templates: Array.isArray(parsed.templates) ? parsed.templates : defaults.templates,
-      preferences: { ...defaults.preferences, ...parsed.preferences },
+      preferences: { ...defaults.preferences, ...parsed.preferences, accent: parsed.preferences?.accent === '#5276c5' ? '#379b83' : (parsed.preferences?.accent ?? defaults.preferences.accent) },
     };
   } catch {
     return defaults;
