@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Print } from '@capacitor-community/print';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, Download, FileText, Plus, Printer, RotateCw, Trash2, Wallet } from 'lucide-react';
@@ -7,29 +8,30 @@ type EventKind = 'Daily' | 'Travel' | 'Custom';
 type EntryKind = 'income' | 'expense';
 type AccountEvent = { id: string; name: string; kind: EventKind; openingBalance: number; startDate: string; description: string; createdAt: string };
 type Transaction = { id: string; eventId: string; kind: EntryKind; amount: number; date: string; description: string; category: string; paymentMethod: string; notes: string };
-type LedgerData = { events: AccountEvent[]; transactions: Transaction[]; deletedTransactionIds: string[] };
+type LedgerData = { events: AccountEvent[]; transactions: Transaction[]; deletedTransactionIds: string[]; deletedEventIds: string[] };
 const STORAGE_KEY = 'eonis-accounting-v1';
 const today = () => new Date().toISOString().slice(0, 10);
 const categories = ['Food', 'Travel', 'Fuel', 'Water', 'Accommodation', 'Shopping', 'Bills', 'Transport', 'Health', 'Entertainment', 'Income', 'Other'];
-const emptyData: LedgerData = { events: [], transactions: [], deletedTransactionIds: [] };
+const emptyData: LedgerData = { events: [], transactions: [], deletedTransactionIds: [], deletedEventIds: [] };
 function loadLedger(): LedgerData {
-  try { const value = localStorage.getItem(STORAGE_KEY); if (!value) return emptyData; const parsed = JSON.parse(value) as LedgerData; return { events: Array.isArray(parsed.events) ? parsed.events : [], transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [], deletedTransactionIds: Array.isArray(parsed.deletedTransactionIds) ? parsed.deletedTransactionIds : [] }; }
+  try { const value = localStorage.getItem(STORAGE_KEY); if (!value) return emptyData; const parsed = JSON.parse(value) as LedgerData; return { events: Array.isArray(parsed.events) ? parsed.events : [], transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [], deletedTransactionIds: Array.isArray(parsed.deletedTransactionIds) ? parsed.deletedTransactionIds : [], deletedEventIds: Array.isArray(parsed.deletedEventIds) ? parsed.deletedEventIds : [] }; }
   catch { return emptyData; }
 }
 function mergeLedgers(local: LedgerData, cloud: LedgerData): LedgerData {
   const deletedTransactionIds = Array.from(new Set([...(cloud.deletedTransactionIds ?? []), ...(local.deletedTransactionIds ?? [])]));
+  const deletedEventIds = Array.from(new Set([...(cloud.deletedEventIds ?? []), ...(local.deletedEventIds ?? [])]));
   const events = new Map<string, AccountEvent>();
   for (const event of cloud.events ?? []) events.set(event.id, event);
   for (const event of local.events ?? []) events.set(event.id, event);
   const transactions = new Map<string, Transaction>();
   for (const transaction of cloud.transactions ?? []) transactions.set(transaction.id, transaction);
   for (const transaction of local.transactions ?? []) transactions.set(transaction.id, transaction);
-  return { events: [...events.values()], transactions: [...transactions.values()].filter((item) => !deletedTransactionIds.includes(item.id)), deletedTransactionIds };
+  return { events: [...events.values()].filter((item) => !deletedEventIds.includes(item.id)), transactions: [...transactions.values()].filter((item) => !deletedTransactionIds.includes(item.id) && !deletedEventIds.includes(item.eventId)), deletedTransactionIds, deletedEventIds };
 }
 function normaliseLedger(value: unknown): LedgerData {
   if (!value || typeof value !== 'object') return emptyData;
   const candidate = value as Partial<LedgerData>;
-  return { events: Array.isArray(candidate.events) ? candidate.events : [], transactions: Array.isArray(candidate.transactions) ? candidate.transactions : [], deletedTransactionIds: Array.isArray(candidate.deletedTransactionIds) ? candidate.deletedTransactionIds : [] };
+  return { events: Array.isArray(candidate.events) ? candidate.events : [], transactions: Array.isArray(candidate.transactions) ? candidate.transactions : [], deletedTransactionIds: Array.isArray(candidate.deletedTransactionIds) ? candidate.deletedTransactionIds : [], deletedEventIds: Array.isArray(candidate.deletedEventIds) ? candidate.deletedEventIds : [] };
 }
 function money(value: number) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value); }
 function id() { return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
@@ -139,6 +141,25 @@ export default function Accounting() {
     if (!window.confirm('Delete this transaction? The running and closing balances will be recalculated.')) return;
     persist({ ...ledger, transactions: ledger.transactions.filter((transaction) => transaction.id !== transactionId), deletedTransactionIds: Array.from(new Set([...ledger.deletedTransactionIds, transactionId])) }); setNotice('Transaction deleted.');
   }
+  function deleteEvent(eventId: string) {
+    const target = ledger.events.find((event) => event.id === eventId);
+    if (!target) return;
+    const related = ledger.transactions.filter((transaction) => transaction.eventId === eventId);
+    const detail = related.length ? ` This will also permanently remove ${related.length} transaction${related.length === 1 ? '' : 's'}.` : '';
+    if (!window.confirm(`Delete the event “${target.name}”?${detail} This deletion will sync to your other devices.`)) return;
+    const nextEvents = ledger.events.filter((event) => event.id !== eventId);
+    const next: LedgerData = {
+      ...ledger,
+      events: nextEvents,
+      transactions: ledger.transactions.filter((transaction) => transaction.eventId !== eventId),
+      deletedTransactionIds: Array.from(new Set([...ledger.deletedTransactionIds, ...related.map((transaction) => transaction.id)])),
+      deletedEventIds: Array.from(new Set([...ledger.deletedEventIds, eventId])),
+    };
+    persist(next);
+    setSelectedId(nextEvents[0]?.id ?? '');
+    setStatementMode(false);
+    setNotice(`“${target.name}” and its transactions were deleted.`);
+  }
   function exportStatement() {
     if (!selected) return;
     const rows = [
@@ -157,6 +178,23 @@ export default function Accounting() {
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = `EONIS-${selected.name.replace(/[^a-z0-9-_]+/gi, '-')}-statement.csv`; anchor.click(); URL.revokeObjectURL(url);
   }
 
+  async function printStatement() {
+    if (!selected) return;
+    const esc = (value: unknown) => String(value ?? '').replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' }[character] ?? character));
+    let running = statementOpening;
+    const rows = filteredTransactions.map((transaction) => {
+      running += transaction.kind === 'income' ? transaction.amount : -transaction.amount;
+      return `<tr><td>${esc(transaction.date)}</td><td>${esc(transaction.description)}${transaction.notes ? `<small>${esc(transaction.notes)}</small>` : ''}</td><td>${esc(transaction.category)}</td><td class="debit">${transaction.kind === 'expense' ? esc(money(transaction.amount)) : '—'}</td><td class="credit">${transaction.kind === 'income' ? esc(money(transaction.amount)) : '—'}</td><td>${esc(money(running))}</td></tr>`;
+    }).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EONIS Statement — ${esc(selected.name)}</title><style>body{font:14px Arial,sans-serif;color:#111;padding:24px}h1{font-size:22px;margin:0 0 6px}p,.meta{color:#444;font-size:12px}.totals{display:flex;gap:28px;flex-wrap:wrap;margin:18px 0}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:9px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f2f4f8}small{display:block;margin-top:4px;color:#555}.debit{color:#a12e3a}.credit{color:#14734b}.foot{margin-top:18px;display:flex;justify-content:space-between;font-weight:bold}@page{size:auto;margin:12mm}@media print{body{padding:0}}</style></head><body><h1>EONIS Accounting Statement</h1><p><b>Event:</b> ${esc(selected.name)} &nbsp; <b>Type:</b> ${esc(selected.kind)}<br><b>Period:</b> ${esc(statementStart || 'Beginning')} to ${esc(statementEnd || 'Present')}<br><b>Generated:</b> ${esc(new Date().toLocaleString())}</p><div class="totals"><span>Opening balance: <b>${esc(money(statementOpening))}</b></span><span>Total debits: <b>${esc(money(filteredTransactions.filter((t) => t.kind === 'expense').reduce((sum, t) => sum + t.amount, 0)))}</b></span><span>Total credits: <b>${esc(money(filteredTransactions.filter((t) => t.kind === 'income').reduce((sum, t) => sum + t.amount, 0)))}</b></span><span>Closing balance: <b>${esc(money(statementClosing))}</b></span></div><table><thead><tr><th>Date</th><th>Description / Notes</th><th>Category</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${rows || '<tr><td colspan="6">No transactions in this period.</td></tr>'}</tbody></table><div class="foot"><span>Opening: ${esc(money(statementOpening))}</span><span>Closing: ${esc(money(statementClosing))}</span></div></body></html>`;
+    try {
+      await Print.print({ name: `EONIS-${selected.name.replace(/[^a-z0-9-_]+/gi, '-')}-statement`, content: html });
+    } catch (error) {
+      console.error('EONIS statement printing failed', error);
+      setNotice('Could not open the print service. Use Export CSV as a backup.');
+    }
+  }
+
   return <div className="accounting-suite">
     <div className="accounting-heading"><div><span className="overline">MONEY, ACCOUNTED FOR</span><h1>Accounting</h1><p>Every rupee tracked. Every event balanced. Your own personal ledger.</p><div className={`accounting-sync-status ${cloudState}`}><span className="accounting-sync-dot" />{cloudState === 'offline' ? 'Local-only mode · cloud not configured' : cloudState === 'signed-out' ? 'Saved on this device · sign in to sync' : cloudState === 'syncing' ? 'Syncing all ledgers and transactions…' : cloudState === 'synced' ? `Cloud synced${lastSyncedAt ? ' · ' + new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}` : 'Cloud sync needs attention'}</div></div><div className="accounting-heading-actions"><button className="button-soft" onClick={() => void syncToCloud()} disabled={syncBusy || !session || !supabase}><RotateCw size={15} className={syncBusy ? 'accounting-spin' : ''} /> {syncBusy ? 'Syncing…' : 'Sync now'}</button><button className="primary-action" onClick={() => setShowNewEvent(true)}><Plus size={16} /> New event</button></div></div>
     {notice && <div className="accounting-notice" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Dismiss notice">×</button></div>}
@@ -167,9 +205,9 @@ export default function Accounting() {
       </aside>
       <section className="accounting-main">
         {selected ? <>
-          <div className="accounting-balance-card"><div><span className="overline">{selected.kind.toUpperCase()} EVENT</span><h2>{selected.name}</h2><p>{selected.description || 'Ledger opened ' + selected.startDate}</p></div><div className="accounting-balance-value"><small>Current balance</small><strong>{money(balance)}</strong></div><div className="accounting-mini-stats"><div><span>Opening balance</span><b>{money(selected.openingBalance)}</b></div><div><span>Total income</span><b className="accounting-positive">{money(totalIncome)}</b></div><div><span>Total expenses</span><b className="accounting-negative">{money(totalExpenses)}</b></div></div></div>
+          <div className="accounting-balance-card"><div><span className="overline">{selected.kind.toUpperCase()} EVENT</span><h2>{selected.name}</h2><p>{selected.description || 'Ledger opened ' + selected.startDate}</p><button className="accounting-event-delete" onClick={() => deleteEvent(selected.id)}><Trash2 size={14} /> Delete event</button></div><div className="accounting-balance-value"><small>Current balance</small><strong>{money(balance)}</strong></div><div className="accounting-mini-stats"><div><span>Opening balance</span><b>{money(selected.openingBalance)}</b></div><div><span>Total income</span><b className="accounting-positive">{money(totalIncome)}</b></div><div><span>Total expenses</span><b className="accounting-negative">{money(totalExpenses)}</b></div></div></div>
           <div className="accounting-actions"><button className="primary-action" onClick={() => setShowNewTransaction(true)}><Plus size={16} /> Add transaction</button><button className={statementMode ? 'button-soft active' : 'button-soft'} onClick={() => setStatementMode(!statementMode)}><FileText size={16} /> {statementMode ? 'Hide statement tools' : 'Custom statement'}</button></div>
-          {statementMode && <section className="panel accounting-statement-tools"><div><span className="overline">STATEMENT BUILDER</span><h2>Choose your period</h2><p>Leave either date blank to include the full ledger history.</p></div><div className="accounting-date-filters"><label>From<input type="date" value={statementStart} onChange={(e) => setStatementStart(e.target.value)} /></label><label>To<input type="date" value={statementEnd} onChange={(e) => setStatementEnd(e.target.value)} /></label><button className="primary-action" onClick={exportStatement}><Download size={15} /> Export CSV</button><button className="button-soft" onClick={() => window.print()}><Printer size={15} /> Print statement</button></div></section>}
+          {statementMode && <section className="panel accounting-statement-tools"><div><span className="overline">STATEMENT BUILDER</span><h2>Choose your period</h2><p>Leave either date blank to include the full ledger history.</p></div><div className="accounting-date-filters"><label>From<input type="date" value={statementStart} onChange={(e) => setStatementStart(e.target.value)} /></label><label>To<input type="date" value={statementEnd} onChange={(e) => setStatementEnd(e.target.value)} /></label><button className="primary-action" onClick={exportStatement}><Download size={15} /> Export CSV</button><button className="button-soft" onClick={() => void printStatement()}><Printer size={15} /> Print statement</button></div></section>}
           <section className="panel accounting-transactions"><div className="panel-heading"><div><span className="overline">{statementMode ? 'STATEMENT ENTRIES' : 'LEDGER'}</span><h2>{statementMode ? 'Transactions in period' : 'Transactions'}</h2></div><span className="accounting-count">{(statementMode ? filteredTransactions : eventTransactions).length} entries</span></div>
             {(statementMode ? filteredTransactions : eventTransactions).length === 0 ? <div className="accounting-empty"><CalendarDays size={23} /><b>No transactions in this period</b><p>Add your first transaction or adjust the statement dates.</p></div> : <div className="accounting-table-wrap"><table className="accounting-table"><thead><tr><th>Date</th><th>Details</th><th>Category</th><th>Debit</th><th>Credit</th><th>Balance</th><th></th></tr></thead><tbody>{(statementMode ? filteredTransactions : eventTransactions).reduce<Array<{ transaction: Transaction; running: number }>>((acc, transaction) => { const previous = acc.length ? acc[acc.length - 1].running : (statementMode ? statementOpening : selected.openingBalance); acc.push({ transaction, running: previous + (transaction.kind === 'income' ? transaction.amount : -transaction.amount) }); return acc; }, []).map(({ transaction, running }) => <tr key={transaction.id}><td>{transaction.date}</td><td><b>{transaction.description}</b><small>{transaction.paymentMethod}{transaction.notes ? ' · ' + transaction.notes : ''}</small></td><td><span className="accounting-category">{transaction.category}</span></td><td className="accounting-negative">{transaction.kind === 'expense' ? money(transaction.amount) : '—'}</td><td className="accounting-positive">{transaction.kind === 'income' ? money(transaction.amount) : '—'}</td><td><b>{money(running)}</b></td><td><button className="icon-button accounting-delete" onClick={() => deleteTransaction(transaction.id)} aria-label={`Delete ${transaction.description}`} title="Delete transaction"><Trash2 size={15} /></button></td></tr>)}</tbody></table></div>}
             <div className="accounting-table-footer"><span>Opening balance <b>{money(statementMode ? statementOpening : selected.openingBalance)}</b></span><span>Closing balance <b>{money(statementMode ? statementClosing : balance)}</b></span></div>
