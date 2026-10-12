@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Print } from '@capacitor-community/print';
+import { Printer } from '@capgo/capacitor-printer';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, Download, FileText, Plus, Printer, RotateCw, Trash2, Wallet } from 'lucide-react';
@@ -188,7 +188,7 @@ export default function Accounting() {
     }).join('');
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EONIS Statement — ${esc(selected.name)}</title><style>body{font:14px Arial,sans-serif;color:#111;padding:24px}h1{font-size:22px;margin:0 0 6px}p,.meta{color:#444;font-size:12px}.totals{display:flex;gap:28px;flex-wrap:wrap;margin:18px 0}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:9px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f2f4f8}small{display:block;margin-top:4px;color:#555}.debit{color:#a12e3a}.credit{color:#14734b}.foot{margin-top:18px;display:flex;justify-content:space-between;font-weight:bold}@page{size:auto;margin:12mm}@media print{body{padding:0}}</style></head><body><h1>EONIS Accounting Statement</h1><p><b>Event:</b> ${esc(selected.name)} &nbsp; <b>Type:</b> ${esc(selected.kind)}<br><b>Period:</b> ${esc(statementStart || 'Beginning')} to ${esc(statementEnd || 'Present')}<br><b>Generated:</b> ${esc(new Date().toLocaleString())}</p><div class="totals"><span>Opening balance: <b>${esc(money(statementOpening))}</b></span><span>Total debits: <b>${esc(money(filteredTransactions.filter((t) => t.kind === 'expense').reduce((sum, t) => sum + t.amount, 0)))}</b></span><span>Total credits: <b>${esc(money(filteredTransactions.filter((t) => t.kind === 'income').reduce((sum, t) => sum + t.amount, 0)))}</b></span><span>Closing balance: <b>${esc(money(statementClosing))}</b></span></div><table><thead><tr><th>Date</th><th>Description / Notes</th><th>Category</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${rows || '<tr><td colspan="6">No transactions in this period.</td></tr>'}</tbody></table><div class="foot"><span>Opening: ${esc(money(statementOpening))}</span><span>Closing: ${esc(money(statementClosing))}</span></div></body></html>`;
     try {
-      await Print.print({ name: `EONIS-${selected.name.replace(/[^a-z0-9-_]+/gi, '-')}-statement`, content: html });
+      await Printer.printHtml({ name: `EONIS-${selected.name.replace(/[^a-z0-9-_]+/gi, '-')}-statement`, html });
     } catch (error) {
       console.error('EONIS statement printing failed', error);
       setNotice('Could not open the print service. Use Export CSV as a backup.');
