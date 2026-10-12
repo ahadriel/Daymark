@@ -3,18 +3,19 @@ import type { Session } from '@supabase/supabase-js';
 import { Browser } from '@capacitor/browser';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
-import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X, RotateCw } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BarChart3, CalendarDays, Wallet, Check, CheckCheck, ChevronRight, Circle, Clock3, Cloud, Command, Download, ExternalLink, Flag, Globe, HardDrive, Home, ListTodo, LogOut, Menu, Moon, Pause, Play, Plus, Search, Settings, Palette, MonitorCog, Sparkles, StickyNote, Sun, Trash2, Upload, WandSparkles, X, RotateCw } from 'lucide-react';
 import { createTask, mergeRecords, newId, type CalendarEvent, type DaymarkData, type DayNote, type Task, type TaskPriority } from './core/model';
 import { planMyDay, suggestTask } from './core/planner';
 import { parseQuickCapture } from './core/quick-capture';
 import { readData, writeData } from './data/local-store';
 import { fromTaskRow, supabase, toTaskRow } from './lib/supabase';
+import Accounting from './Accounting';
 
-type View = 'Today' | 'Tasks' | 'Calendar' | 'Timeline' | 'Planner' | 'Notes' | 'Insights' | 'Browser' | 'Settings';
+type View = 'Today' | 'Tasks' | 'Calendar' | 'Timeline' | 'Planner' | 'Notes' | 'Insights' | 'Accounting' | 'Browser' | 'Settings';
 type TaskFilter = 'all' | 'open' | 'completed' | 'today' | 'upcoming' | 'overdue' | 'high' | 'unscheduled';
 const nav: Array<{ label: View; icon: typeof Home }> = [
   { label: 'Today', icon: Home }, { label: 'Tasks', icon: ListTodo }, { label: 'Calendar', icon: CalendarDays }, { label: 'Timeline', icon: Clock3 },
-  { label: 'Planner', icon: WandSparkles }, { label: 'Notes', icon: StickyNote }, { label: 'Insights', icon: BarChart3 }, { label: 'Browser', icon: Globe }, { label: 'Settings', icon: Settings },
+  { label: 'Planner', icon: WandSparkles }, { label: 'Notes', icon: StickyNote }, { label: 'Insights', icon: BarChart3 }, { label: 'Accounting', icon: Wallet }, { label: 'Browser', icon: Globe }, { label: 'Settings', icon: Settings },
 ];
 const filters: Array<{ label: string; value: TaskFilter }> = [
   { label: 'All tasks', value: 'all' }, { label: 'Open', value: 'open' }, { label: 'Completed', value: 'completed' }, { label: 'Today', value: 'today' },
@@ -294,6 +295,7 @@ function App() {
     <main className="main-area">
       <header className="topbar"><button className="icon-button mobile-only" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={19} /></button><div className="crumb"><span>EONIS</span><ChevronRight size={14} /><b>{view}</b></div><div className="top-actions"><div className="top-date">{dayLabel(today, { weekday: 'long', month: 'long', day: 'numeric' })}</div><button className="search-trigger" onClick={() => setCommandOpen(true)}><Search size={15} /><span>Search EONIS</span><kbd><Command size={10} /> K</kbd></button><button className="profile-chip" onClick={() => go('Settings')} title="Account settings">{session?.user.email?.slice(0, 1).toUpperCase() ?? 'S'}</button></div></header>
       <div className="page-content">
+        {view === 'Accounting' && <Accounting />}
         {view === 'Today' && <>
           <section className="welcome-row"><div><span className="overline">{dayLabel(today, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span><h1>A clearer day<br /><em>starts here.</em></h1><p>Choose what matters. Make a little room to do it.</p></div><div className="progress-card"><div className="progress-top"><span>Today’s progress</span><Activity size={17} /></div><div className="progress-number">{percent}<small>%</small></div><div className="progress-track"><span style={{ width: `${percent}%` }} /></div><div className="progress-caption"><span>{completedTasks.length} finished</span><span>{openTasks.length} to go</span></div></div></section>
           <div className="quick-capture"><div className="capture-plus"><Plus size={18} /></div><input id="quick-capture" value={capture} onChange={(event) => setCapture(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') addTask(); }} placeholder="Add a task — try ‘Read chapter tomorrow at 5pm’" /><button onClick={addTask} disabled={!capture.trim()}>Add task <span>↵</span></button></div>
