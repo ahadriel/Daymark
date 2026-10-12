@@ -180,7 +180,7 @@ export default function Accounting() {
 
   async function printStatement() {
     if (!selected) return;
-    const esc = (value: unknown) => String(value ?? '').replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' }[character] ?? character));
+    const esc = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#39;');
     let running = statementOpening;
     const rows = filteredTransactions.map((transaction) => {
       running += transaction.kind === 'income' ? transaction.amount : -transaction.amount;
