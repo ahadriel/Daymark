@@ -16,7 +16,7 @@
     "desktop:build": "pnpm build && electron-builder --win nsis --x64"
   },
   "dependencies": {
-    "@capacitor-community/print": "^7.0.1",
+    "@capgo/capacitor-printer": "^8.0.0",
     "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.0",
     "@capacitor/local-notifications": "^8.0.0",
