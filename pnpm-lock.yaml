@@ -17,6 +17,9 @@ importers:
       '@capacitor/local-notifications':
         specifier: ^8.0.0
         version: 8.3.1(@capacitor/core@8.5.2)
+      '@capgo/capacitor-printer':
+        specifier: ^8.0.0
+        version: 8.1.6(@capacitor/core@8.5.2)
       '@supabase/supabase-js':
         specifier: ^2.57.4
         version: 2.117.2
@@ -163,6 +166,11 @@ packages:
 
   '@capacitor/local-notifications@8.3.1':
     resolution: {integrity: sha512-F7zu/+p/mIR958YP4axOkeI5hBKRaXDyYjbNPrAil2wWfd7OxScPSTvP9t85NpQ0eULVRu0/sntoxOg6ck477A==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capgo/capacitor-printer@8.1.6':
+    resolution: {integrity: sha512-Xg7Oj1rY4wiS2vgyW2ZT4cwlA9nNVM7tmDwhRRaqS3NMsW9LpZ5woXdfVepjSA0RKUcAybijn0KnLLhCD3vG4A==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -2072,6 +2080,10 @@ snapshots:
       tslib: 2.8.1
 
   '@capacitor/local-notifications@8.3.1(@capacitor/core@8.5.2)':
+    dependencies:
+      '@capacitor/core': 8.5.2
+
+  '@capgo/capacitor-printer@8.1.6(@capacitor/core@8.5.2)':
     dependencies:
       '@capacitor/core': 8.5.2
 
