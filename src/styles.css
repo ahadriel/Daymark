@@ -1,6 +1,6 @@
 
 
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#20283a;background:#f4f6fb;font-synthesis:none;text-rendering:optimizeLegibility;font-smooth:always;--bg:#f4f6fb;--paper:#ffffff;--sidebar:#eaf0fa;--ink:#20283a;--muted:#7e8799;--line:#dfe5f0;--accent:#5276c5;--accent-soft:#e7edfb;--green:#547fb7;--shadow:0 18px 55px rgba(19,32,62,.08)}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#20283a;background:#f4f6fb;font-synthesis:none;text-rendering:optimizeLegibility;font-smooth:always;--bg:#f4f6fb;--paper:#ffffff;--sidebar:#eaf0fa;--ink:#20283a;--muted:#7e8799;--line:#dfe5f0;--accent:#379b83;--accent-soft:#e7edfb;--green:#547fb7;--shadow:0 18px 55px rgba(19,32,62,.08)}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#080d1a;--paper:#0e1628;--sidebar:#0a1120;--ink:#edf2ff;--muted:#98a5bf;--line:#202d46;--accent:#7da4ff;--accent-soft:#172747;--green:#8eb5ff;--shadow:0 18px 55px rgba(0,0,0,.32)}
 *{box-sizing:border-box}html,body,#root{margin:0;min-width:320px;min-height:100%;background:var(--bg)}body{min-height:100vh;color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}::selection{background:color-mix(in srgb,var(--accent) 20%,transparent)}
 .app-frame{min-height:100vh;display:grid;grid-template-columns:252px minmax(0,1fr);background:var(--bg)}.sidebar{height:100vh;position:sticky;top:0;z-index:20;display:flex;flex-direction:column;padding:27px 19px 18px;background:var(--sidebar);border-right:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;padding:0 7px}.brand-symbol{width:40px;height:40px;flex:0 0 40px;border-radius:13px;background:#0a1120;display:grid;place-items:center;box-shadow:0 0 0 1px #8aaaff33,0 5px 18px #18284b22}.brand-symbol img{display:block;width:40px;height:40px;border-radius:13px}.brand-copy{min-width:0}.brand b{display:block;font:600 18px/1 Inter,ui-sans-serif,system-ui,sans-serif;letter-spacing:.19em;white-space:nowrap;color:var(--ink)}.brand span{display:block;font:7px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.12em;color:var(--muted);margin-top:7px;white-space:nowrap}.workspace-label{display:flex;justify-content:space-between;align-items:center;margin:47px 8px 12px;color:var(--muted);font:600 9px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.14em}.workspace-label span{font-size:8px;color:var(--green)}.main-nav{display:grid;gap:4px}.nav-link{border:0;background:transparent;display:flex;align-items:center;gap:12px;min-height:42px;padding:0 11px;border-radius:9px;color:var(--muted);font-size:12px;font-weight:550;text-align:left;transition:background .15s,color .15s}.nav-link:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}.nav-link.selected{background:var(--paper);color:var(--ink);box-shadow:0 3px 12px rgba(30,35,30,.045)}.nav-link.selected svg{color:var(--accent)}.nav-link span{flex:1}.nav-link small{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}.sidebar-nudge{margin:38px 5px 0;padding:18px 16px 17px;background:#101a30;color:#f0f4ff;border-radius:14px;position:relative;overflow:hidden}.sidebar-nudge:after{content:"";position:absolute;width:130px;height:130px;border:1px solid #ffffff17;border-radius:50%;right:-62px;top:-72px}.sidebar-nudge>svg{color:#9bbaff;margin-bottom:20px}.sidebar-nudge .eyebrow{display:block;color:#b8bbb1}.sidebar-nudge p{max-width:155px;margin:8px 0 0;font:500 17px/1.32 Georgia,serif;letter-spacing:-.025em}.sidebar-bottom{margin-top:auto;display:flex;align-items:center;gap:8px;padding:12px 5px 2px;color:var(--muted);font-size:10px}.connection-dot{width:7px;height:7px;border-radius:50%;background:#85a28b;box-shadow:0 0 0 4px color-mix(in srgb,#85a28b 15%,transparent)}.connection-dot.connected{background:#65a77b}.theme-button{margin-left:auto}.icon-button{width:30px;height:30px;display:grid;place-items:center;background:transparent;border:0;border-radius:8px;color:var(--muted);transition:.15s}.icon-button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink)}.mobile-only,.mobile-scrim{display:none}
@@ -108,3 +108,45 @@ body:has(.browser-toolbar) .browser-frame iframe { display:block; width:100%; he
 .accounting-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}.accounting-heading-actions button{display:flex;align-items:center;gap:7px;white-space:nowrap}.accounting-sync-status{display:flex;align-items:center;gap:7px;margin-top:10px;color:var(--muted);font-size:11px}.accounting-sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 7px}.accounting-sync-status.synced .accounting-sync-dot{background:#16845a}.accounting-sync-status.syncing .accounting-sync-dot{background:#d6a23b;animation:accounting-pulse 1s infinite alternate}.accounting-sync-status.error .accounting-sync-dot{background:#c24e59}.accounting-sync-status.offline .accounting-sync-dot,.accounting-sync-status.signed-out .accounting-sync-dot{background:var(--muted)}.accounting-heading-actions button:disabled{opacity:.55;cursor:not-allowed}.accounting-spin{animation:accounting-spin .9s linear infinite}@keyframes accounting-spin{to{transform:rotate(360deg)}}@keyframes accounting-pulse{to{opacity:.35}}
 @media(max-width:560px){.accounting-heading{flex-direction:column}.accounting-heading-actions{width:100%;justify-content:stretch}.accounting-heading-actions button{flex:1;justify-content:center}}
 @media print{.accounting-heading-actions,.accounting-sync-status{display:none!important}}
+
+
+/* EONIS polish: seafoam default, responsive destructive action, theme-aware balance card */
+.accounting-event-delete{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:34px;margin-top:14px;padding:0 11px;
+  border:1px solid #e7b9bd;border-radius:9px;
+  background:#fff3f3;color:#a83c48;
+  font-size:11px;font-weight:650;line-height:1.2;
+  transition:background .16s,border-color .16s,transform .16s;
+}
+.accounting-event-delete:hover{background:#ffe5e7;border-color:#d98992;color:#8f2633}
+.accounting-event-delete:active{transform:translateY(1px)}
+.accounting-event-delete:focus-visible{outline:2px solid #c34d5a;outline-offset:2px}
+.accounting-balance-card{
+  color:var(--ink);
+  background:radial-gradient(ellipse at 90% 0%,#d4f3e9 0%,transparent 48%),linear-gradient(135deg,#f7fffc,#e9f8f2 72%,#dff2e9);
+  border:1px solid #cce9df;
+}
+.accounting-balance-card .overline{color:#397f70}
+.accounting-balance-card p,.accounting-balance-value small,.accounting-mini-stats span{color:#567a70}
+.accounting-mini-stats{border-top-color:#bddfd3}
+.accounting-balance-card .accounting-positive{color:#176f51!important}
+.accounting-balance-card .accounting-negative{color:#a63848!important}
+:root[data-theme="dark"] .accounting-balance-card{
+  color:#f2f5ff;
+  background:radial-gradient(ellipse at 85% 0%,#36558d 0%,transparent 45%),linear-gradient(135deg,#101a31,#172849 70%,#20365b);
+  border-color:transparent;
+}
+:root[data-theme="dark"] .accounting-balance-card .overline{color:#a9bee8}
+:root[data-theme="dark"] .accounting-balance-card p,
+:root[data-theme="dark"] .accounting-balance-value small,
+:root[data-theme="dark"] .accounting-mini-stats span{color:#b7c5df}
+:root[data-theme="dark"] .accounting-mini-stats{border-top-color:#ffffff25}
+:root[data-theme="dark"] .accounting-balance-card .accounting-positive{color:#a5f0ce!important}
+:root[data-theme="dark"] .accounting-balance-card .accounting-negative{color:#ffb5bd!important}
+:root[data-theme="dark"] .accounting-event-delete{background:#351b25;border-color:#66313b;color:#ffb6bf}
+:root[data-theme="dark"] .accounting-event-delete:hover{background:#49212c;border-color:#98505b;color:#ffe1e4}
+@media(max-width:560px){
+  .accounting-event-delete{min-height:36px;margin-top:12px;padding:0 10px}
+  .accounting-balance-card{gap:14px}
+}
