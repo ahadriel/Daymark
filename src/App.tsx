@@ -65,7 +65,7 @@ function App() {
   const completedTasks = tasks.filter((task) => task.status === 'completed');
   const today = new Date();
   const hour = today.getHours();
-  const greeting = hour >= 5 && hour < 12 ? 'Good morning' : hour >= 12 && hour < 17 ? 'Good afternoon' : hour >= 17 && hour < 21 ? 'Good evening' : 'Good night';
+  const greeting = hour >= 5 && hour < 12 ? 'Good morning' : hour >= 12 && hour < 17 ? 'Good afternoon' : hour >= 17 && hour < 21 ? 'Good evening' : 'Good evening';
   const displayName = String(profile.displayName || profile.fullName || session?.user.user_metadata?.full_name || session?.user.user_metadata?.name || session?.user.user_metadata?.first_name || session?.user.email?.split('@')[0] || '').trim();
   const overdueTasks = openTasks.filter((task) => task.dueAt && new Date(task.dueAt) < today);
   const todayTasks = openTasks.filter((task) => !task.dueAt || new Date(task.dueAt) <= today || sameDay(new Date(task.dueAt), today));
