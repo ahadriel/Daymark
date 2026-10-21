@@ -143,6 +143,7 @@ class MainActivity : Activity() {
         listOf(
             Triple("‹", "Back") { goBack() },
             Triple("›", "Forward") { goForward() },
+            Triple("↻", "Refresh") { reloadCurrent() },
             Triple("⌂", "Home") { showHome() },
             Triple("☆", "Save bookmark") { toggleBookmark() },
             Triple("☰", "Menu") { showMenu() }
@@ -368,6 +369,11 @@ class MainActivity : Activity() {
     private fun goForward() {
         val web = currentWeb()
         if (web?.canGoForward() == true) web.goForward()
+    }
+
+    private fun reloadCurrent() {
+        val web = currentWeb()
+        if (web?.url.isNullOrBlank() || web?.url == "about:blank") showHome() else web?.reload()
     }
 
     private fun updateTabLabel() {
