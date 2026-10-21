@@ -450,8 +450,6 @@ class MainActivity : Activity() {
 
     private fun openPrivateTab() {
         privateMode = true
-        CookieManager.getInstance().removeAllCookies(null)
-        CookieManager.getInstance().flush()
         val web = WebView(this)
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = false
@@ -477,7 +475,7 @@ class MainActivity : Activity() {
         address.setText("https://duckduckgo.com")
         web.loadUrl("https://duckduckgo.com")
         updateTabLabel()
-        Toast.makeText(this, "Private tab opened. Existing site cookies were cleared.", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Private-style tab: history isn't saved, but cookies may be shared.", Toast.LENGTH_LONG).show()
     }
 
     private fun button(label: String, bg: Int, fg: Int, action: () -> Unit): Button =
